@@ -1,0 +1,7 @@
+Exercise 6
+----------
+
+0x00100000 <bogus+       0>:    0x1badb002      0x00000003      0xe4524ffb      0x7205c766
+0x00100010 <bogus+      16>:    0x34000004      0x15010f12      0x0010f018      0x000010b8
+
+ It's used by the kernel.
