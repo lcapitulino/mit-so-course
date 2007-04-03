@@ -1,0 +1,10 @@
+Exercise 7
+----------
+
+The first instruction that would do the wrong thing if the boot loader
+link address is wrong is this one:
+
+movw    $start,%sp              # Stack Pointer
+
+Because it sets the stack address at 0x7c00 in the normal case, but if
+the link address is wrong, the CPU may override important memory regions.
