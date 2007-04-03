@@ -1,4 +1,25 @@
----> u /43 0x00007c81
+Exercise 4
+----------
+
+Q1: Identify the exact assembly instructions that correspond to each of the
+statements in readsect().
+
+-> Comando do bochs para 'desassemblar' a função readsect():
+
+	u /43 0x00007c81
+
+   Obviamente que para esse comando funcionar, o código do bootloader tem que
+   ter sido carregado na memória (isso é feito pela BIOS).
+
+-> Resposta completa abaixo, note os seguintes detalhes:
+
+ 1. A função waitdisk() foi colocada inline pelo GCC
+ 2. outb() e insl() são inlines, definidas em inc/x86.h
+ 3. O GCC fez outras otimizações além de 'inlinear' waitdisk(). Por exemplo,
+    os parametros da função readsect() foram carregados em registradores
+    ('offset' em ECX e 'dst' em EDI); os bits mais significativos do parâmetro
+    'port' para outb() é carregado apenas uma vez para todas operações
+    (primeira linha de waitdisk())...
 
 waitdisk():
 00007c8b: (                    ): mov edx, 0x000001f7       ; baf7010000
