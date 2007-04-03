@@ -73,3 +73,46 @@ insl(0x1F0, dst, SECTSIZE/4);
 00007cd7: (                    ): mov ecx, 0x00000080       ; b980000000
 00007cdc: (                    ): cld                       ; fc
 00007cdd: (                    ): repne insd dword ptr es:[edi], dx ; f26d
+
+
+Q2: Trace through the rest of readsect() and back out into cmain(),
+and identify the begin and end of the for loop that reads the remaining
+sectors of the kernel from the disk.
+
+start (pula para o teste do loop)
+00007d63: (                    ): jmp .+0x00000014          ; eb14
+
+end (teste do loop, última instrução do loop)
+00007d7b: (                    ): jb .+0xffffffe8           ; 72e8
+
+
+Q3: Find out what code will run when the loop is finished, set a breakpoint
+there, and continue to that breakpoint.
+
+Address: 0x10000c
+
+
+Q4: At exactly what point does the processor transition from executing 16-bit
+code to executing 32-bit code?
+
+At boot.S:75. After executing the ljmp instruction the processor will be
+executing in 32-bit code.
+
+Q5: What is the last instruction of the boot loader executed, and what is the
+first instruction of the kernel it just loaded?
+
+boot loader last instruction:
+00007d87: (                    ): call eax                  ; ffd0
+
+first kernel instruction:
+(0) [0x0010000c] 0008:0010000c (unk. ctxt): mov word ptr ds:0x472, 0x1234 ; 66c705720400003412
+
+Q6: How does the boot loader decide how many sectors it must read in order to
+fetch the entire kernel from disk? Where does it find this information?
+
+The boot loader finds that information in the kernel file itself. As the kernel
+file is an ELF file, it has an ELF header which describes everything that the
+boot loader must know.
+
+Thus, the boot loader firstly loads the kernel file's header into memory and
+then consult the appropriate members to learn the kernel's size.
