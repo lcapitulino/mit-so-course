@@ -23,6 +23,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "halt", "Halt the processor", mon_halt },
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -52,6 +53,14 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 	cprintf("  end    %08x (virt)  %08x (phys)\n", end, end - KERNBASE);
 	cprintf("Kernel executable memory footprint: %dKB\n",
 		(end-_start+1023)/1024);
+	return 0;
+}
+
+int
+mon_halt(int argc, char **argv, struct Trapframe *tf)
+{
+	cprintf("Halting the processor\n");
+	asm("hlt");
 	return 0;
 }
 
