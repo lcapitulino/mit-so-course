@@ -4,7 +4,16 @@ Exercise 7
 The first instruction that would do the wrong thing if the boot loader
 link address is wrong is this one:
 
-movw    $start,%sp              # Stack Pointer
+(0) [0x00007c31] 0000:00007c31 (unk. ctxt): jmp far 0008:7c36         ; ea367c0800
 
-Because it sets the stack address at 0x7c00 in the normal case, but if
-the link address is wrong, the CPU may override important memory regions.
+which corresponds to this line in boot.S:
+
+ljmp    $PROT_MODE_CSEG, $protcseg
+
+The reason is that, all the labels' addresses are calculated from the entry
+point address, but the code is loaded at a fixed address.
+
+So, for example, lets say that you changed the linker address from 0x7C00 to
+0x7C08. This will change the 'protcseg' from 0x7C36 to 0x7C3E. But as the
+boot loader code was loaded at 0x7C00 address, you'll jump to the wrong
+location.
