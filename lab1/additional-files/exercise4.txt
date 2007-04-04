@@ -89,7 +89,7 @@ end (teste do loop, última instrução do loop)
 Q3: Find out what code will run when the loop is finished, set a breakpoint
 there, and continue to that breakpoint.
 
-Address: 0x10000c
+Address: 0x0010000c
 
 
 Q4: At exactly what point does the processor transition from executing 16-bit
