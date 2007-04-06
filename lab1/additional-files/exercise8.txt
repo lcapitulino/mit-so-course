@@ -6,7 +6,7 @@ which the new virtual-to-physical mapping takes effect. Then examine the
 Global Descriptor Table (GDT) that the code uses to achieve this effect,
 and make sure you understand what's going on.
 
- The new virtual-to-physical mapping will take effect in this instruction:
+ The new virtual-to-physical mapping will take effect at this instruction:
 
 (0) [0x00100015] 0008:00100015 (unk. ctxt): lgdt ds:0x10f018          ; 0f011518f01000
 
@@ -53,10 +53,6 @@ ljmp    $CODE_SEL,$relocated            # reload CS by jumping
 'relocated's virtual address is 0xF010002e, it must be mapped to the linear
 address 0x0010002E, because it's where the 'relocated's code is.
 
- So, if we change the the virtual-to-physical mapping to a wrong value
+ So, if we change the virtual-to-physical mapping to a wrong value
 (ie, any value which doesn't map 0xF010002e to 0x0010002E) that instruction
-may jump to any location.
-
-FIXME: Completar. Temos dois casos: o endereço errado está dentro do
-range da GDT (o que é permitido, o jump vai funcionar); ou endereço está
-fora do range da GDT, isso vai causar um erro de acesso a memória.
+will jump to a wrong location.
