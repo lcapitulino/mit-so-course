@@ -4,22 +4,20 @@ Exercise 4
 Q1: Identify the exact assembly instructions that correspond to each of the
 statements in readsect().
 
--> Comando do bochs para 'desassemblar' a função readsect():
+-> Bochs command to disassemble the readsect() function:
 
-	u /43 0x00007c81
+	u /48 0x00007c81
 
-   Obviamente que para esse comando funcionar, o código do bootloader tem que
-   ter sido carregado na memória (isso é feito pela BIOS).
+  (will only work after the boot loader code has been loaded by the BIOS)
 
--> Resposta completa abaixo, note os seguintes detalhes:
+-> Important notes
 
- 1. A função waitdisk() foi colocada inline pelo GCC
- 2. outb() e insl() são inlines, definidas em inc/x86.h
- 3. O GCC fez outras otimizações além de 'inlinear' waitdisk(). Por exemplo,
-    os parametros da função readsect() foram carregados em registradores
-    ('offset' em ECX e 'dst' em EDI); os bits mais significativos do parâmetro
-    'port' para outb() é carregado apenas uma vez para todas operações
-    (primeira linha de waitdisk())...
+ 1. GCC inlines waitdisk()
+ 2. outb() and insl() are inline functions, defined in inc/x86.h
+ 3. GCC does a number of optimizations in this code. For instance, readsect()
+    parameters are loaded in the CPU's registers ('offset' in ECX and 'dst'
+    in EDI); the most significant bits of outb()'s 'port' is loaded only once,
+    for all the operations.
 
 waitdisk():
 00007c8b: (                    ): mov edx, 0x000001f7       ; baf7010000
@@ -79,10 +77,10 @@ Q2: Trace through the rest of readsect() and back out into cmain(),
 and identify the begin and end of the for loop that reads the remaining
 sectors of the kernel from the disk.
 
-start (pula para o teste do loop)
+start (jumps to the loop's test)
 00007d63: (                    ): jmp .+0x00000014          ; eb14
 
-end (teste do loop, última instrução do loop)
+end (loop's test, also its last instruction)
 00007d7b: (                    ): jb .+0xffffffe8           ; 72e8
 
 
@@ -112,7 +110,7 @@ fetch the entire kernel from disk? Where does it find this information?
 
 The boot loader finds that information in the kernel file itself. As the kernel
 file is an ELF file, it has an ELF header which describes everything that the
-boot loader must know.
+boot loader must to know.
 
 Thus, the boot loader firstly loads the kernel file's header into memory and
 then consult the appropriate members to learn the kernel's size.
