@@ -9,71 +9,85 @@
  Este documento explica a sequência de incialização do PC, baseando-se no
 emulador bochs e no kernel do curso de sistemas operacionais do MIT (JOS).
 
-2. Modo real
-------------
+2. Modos de operação
+--------------------
 
- Quando o PC é ligado o processador é um genuíno Intel 8086, o primeiro
-processador da família x86. Esse modo de operação é conhecido como real,
-então o processador é dito estar no modo real.
+FIXME: Descrever modos de operação
+
+2.1 Modo real
+-------------
+
+ Quando o PC é ligado o processador está em um modo de operação conhecido
+como 'modo real'. Neste modo o processador é um genuíno Intel 8086, o
+primeiro processador da família x86.
 
  As características mais importantes do modo real são:
 
- - Barramento de dados e registradores de propósito geral de 16-bits
+ o Barramento de dados e registradores de propósito geral de 16-bits
    (ie, processador de 16-bits)
- - Barramento de endereçamento de 20-bits, então endereça até 1MB de RAM
+ o Barramento de endereçamento de 20-bits, então endereça até 1MB de RAM
    (0x00000 - 0xFFFFF)
- - Endereço físico = segmento * 16 + offset
- - Limite de 640KB de RAM. O intervalo de 640KB-1MB era mapeado para outros
+ o Limite de 640KB de RAM. O intervalo de 640KB-1MB é mapeado para outros
    usos (display VGA, ROMs de expansão e BIOS)
+
+ O processador inicia em modo real para manter compatibilidade com os
+softwares que foram escritos para o 8086 e 8088.
+
+2.2 Modo protegido
+------------------
+
+FIXME: Descrever
 
 3. BIOS
 -------
 
- Logo quando é ligado, o processador carrega o registrador CS (Code Segment)
-com o valor 0xF000 e o IP (Instruction Pointer) com 0xFFF0. Isso significa que
-o processador começa executando o código contido no endereço físico 0x000FFFF0.
+ Logo quando é ligado, o processador (simulado pelo bochs) carrega o
+registrador CS (Code Segment) com o valor 0xF000 e o IP (Instruction Pointer)
+com 0xFFF0. Isso significa que o processador começa executando o código
+contido no endereço físico 0x000FFFF0.
 
  Esse endereço está dentro da área de memória da BIOS, que vai de 0x000F0000
 até 0x00100000 (o hardware do PC mapeia esse intervalo para a memória flash
 que contêm a BIOS), mas 0x000FFFF0 é o final da região de memória da BIOS,
 restam apenas 16 bytes para acabar o espaço.
 
- Então a primeira instrução que o código da BIOS do bochs executa, é um salto
+ Então a primeira instrução que o código da BIOS do bochs executa é um salto
 para o começo da região da área de memória da BIOS:
 
 (0) [0xfffffff0] f000:fff0 (unk. ctxt): jmp far f000:e05b         ; ea5be000f0
 
- Assim, o código da BIOS fica com um intervalo maior para executar seu
-código.
+ Dessa maneira, o código da BIOS fica com um intervalo maior.
 
  A BIOS executa, e suas tarefas mais importantes são:
 
- 1. Fazer tests de consistência e inicializar vários dispositivos
- 2. Configurar dispositivos PCI
- 3. Verificar a quantidade de memória disponível no sistema
- 4. Carregar o código do boot loader e executá-lo
+ o Fazer testes de consistência e inicializar vários dispositivos
+ o Configurar dispositivos PCI
+ o Verificar a quantidade de memória disponível no sistema
+ o Carregar o código do boot loader e executá-lo
 
- O item 4, é também o último procedimento que a BIOS executa. Ela procura
-por dispositivo de boot (disco rígido ou disquete, normalmente configurado
+ O último ítem é também o último procedimento que a BIOS executa. Ela procura
+por um dispositivo de boot (disco rígido ou disquete, normalmente configurado
 pelo usuário) e carrega seu primeiro setor (512 bytes) no intervalor de
 endereço físico 0x00007C00-0x00007DFF e, usando a instrução jmp, pula para
-lá, transferindo o controle para o boot loader.
+este endereço, transferindo o controle para o boot loader.
+
+FIXME: Falar sobre boot em CD-ROM.
 
 4. Boot Loader
 --------------
 
  O objetivo do boot loader é carregar o kernel do disco rígido (ou da mídia
-que ele estiver armazenado) e transferir o controle para ele.
+em que ele estiver armazenado) e transferir o controle para ele.
 
- O boot loader do JOS é muito simples, ele é escrito em linguagem de
-montagem e C.
+ O boot loader do JOS é muito simples, ele é escrito em linguagem assembly
+e C.
 
- O código em assembly faz o seguinte:
+ O código em assembly executa as seguintes operações:
 
  1. Desabilita interruções
  2. Coloca 0 nos registradores de segmento
  3. Configura a pilha
- 4. Habilita o circuito A20 para poder endereçar 1MB de memória em mode real
+ 4. Habilita a linha A20 para poder endereçar 1MB de memória em mode real
  5. Entra em modo protegido
  6. Pula para o código em C
 
@@ -82,7 +96,7 @@ segmento de dados. Ambos tem base 0 e limite de 4GB, o que significa que
 toda a memória disponível no computador pode ser endereçada.
 
  O código em C do boot loader é igualmente simples, tudo o que ele faz é
-carregar o kernel do disco e chamar a o entry point do cabeçalho ELF.
+carregar o kernel do disco e chamar o entry point do cabeçalho ELF.
 
  O kernel é carregado no endereço 0x0010000, e tanto a informação do tamanho
 do kernel quanto o entry point (ie, o código que deve começar a ser
