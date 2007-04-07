@@ -12,7 +12,8 @@ emulador bochs e no kernel do curso de sistemas operacionais do MIT (JOS).
 2. Modos de operação
 --------------------
 
-FIXME: Descrever modos de operação
+ Existem dois modos de acesso a memória que um processador x86 suporta.
+Modo real e modo protegido. Ambos são apresentados a seguir.
 
 2.1 Modo real
 -------------
@@ -21,7 +22,7 @@ FIXME: Descrever modos de operação
 como 'modo real'. Neste modo o processador é um genuíno Intel 8086, o
 primeiro processador da família x86.
 
- As características mais importantes do modo real são:
+ As principais características do modo real são:
 
  o Barramento de dados e registradores de propósito geral de 16-bits
    (ie, processador de 16-bits)
@@ -29,14 +30,44 @@ primeiro processador da família x86.
    (0x00000 - 0xFFFFF)
  o Limite de 640KB de RAM. O intervalo de 640KB-1MB é mapeado para outros
    usos (display VGA, ROMs de expansão e BIOS)
+ o Não há restrições ao acesso a memória, isto é, o processador não
+   implementa nenhum tipo de proteção
+ o As funções da BIOS podem ser acessadas diretamente
 
- O processador inicia em modo real para manter compatibilidade com os
-softwares que foram escritos para o 8086 e 8088.
+ Note que embora a memória seja segmentada, o processador não impõe nenhuma
+restrição para acessá-la. De fato, segmentação foi adicionada para ser
+possível endereçar mais de 64KB com registradores de 16-bits.
+
+ Isso significa que os programas armazenados na memória tem liberdade
+para escrever/ler qualquer região da memória, inclusive segmentos de outros
+programas.
+
+ Mais informações em:
+	http://en.wikipedia.org/wiki/8086
 
 2.2 Modo protegido
 ------------------
 
-FIXME: Descrever
+ O modo protegido foi introduzido no processador 80286 e estendido no
+processador 80386.
+
+ As principais características do modo protegido (considerando a
+arquitetura do processador 80386) são:
+
+ o Proteção ao acesso a memória: níveis de privilégio e descritores de
+   segmento para implementar regras de acesso a segmentos de memória
+ o Paginação: memória virtual, também implementa bits de proteção
+ o Suporte para troca de contexto
+ o Proteção para operações de I/O
+ o Processador de 32-bits, pode endereçar até 4GB de RAM
+
+ Como visto anteriormente, o processador inicia em modo real. A mudança
+de modo real para modo protegido é feita por software.
+
+ Mais informações e explicações detalhadas sobre o modo protegido podem
+ser encontradas nos manuais da Intel, um breve resumo pode ser encontrado
+em:
+	http://en.wikipedia.org/wiki/Protected_mode
 
 3. BIOS
 -------
@@ -44,7 +75,7 @@ FIXME: Descrever
  Logo quando é ligado, o processador (simulado pelo bochs) carrega o
 registrador CS (Code Segment) com o valor 0xF000 e o IP (Instruction Pointer)
 com 0xFFF0. Isso significa que o processador começa executando o código
-contido no endereço físico 0x000FFFF0.
+contido no endereço físico 0x000FFFF0 (modo real).
 
  Esse endereço está dentro da área de memória da BIOS, que vai de 0x000F0000
 até 0x00100000 (o hardware do PC mapeia esse intervalo para a memória flash
@@ -52,24 +83,26 @@ que contêm a BIOS), mas 0x000FFFF0 é o final da região de memória da BIOS,
 restam apenas 16 bytes para acabar o espaço.
 
  Então a primeira instrução que o código da BIOS do bochs executa é um salto
-para o começo da região da área de memória da BIOS:
+para o endereço 0x000FE05B, que está quase no começo da região da área de
+memória da BIOS:
 
 (0) [0xfffffff0] f000:fff0 (unk. ctxt): jmp far f000:e05b         ; ea5be000f0
 
- Dessa maneira, o código da BIOS fica com um intervalo maior.
+ Dessa maneira, o código da BIOS fica com um intervalo maior, e tem mais
+espaço para o seu código e dados.
 
- A BIOS executa, e suas tarefas mais importantes são:
+ A BIOS vai executar, e suas tarefas mais importantes são:
 
  o Fazer testes de consistência e inicializar vários dispositivos
  o Configurar dispositivos PCI
  o Verificar a quantidade de memória disponível no sistema
- o Carregar o código do boot loader e executá-lo
+ o Carregar o código do boot loader e transferir o controle para ele
 
  O último ítem é também o último procedimento que a BIOS executa. Ela procura
 por um dispositivo de boot (disco rígido ou disquete, normalmente configurado
-pelo usuário) e carrega seu primeiro setor (512 bytes) no intervalor de
+pelo usuário) e carrega seu primeiro setor (512 bytes) no intervalo de
 endereço físico 0x00007C00-0x00007DFF e, usando a instrução jmp, pula para
-este endereço, transferindo o controle para o boot loader.
+esse endereço, transferindo o controle para o boot loader.
 
 FIXME: Falar sobre boot em CD-ROM.
 
@@ -79,47 +112,71 @@ FIXME: Falar sobre boot em CD-ROM.
  O objetivo do boot loader é carregar o kernel do disco rígido (ou da mídia
 em que ele estiver armazenado) e transferir o controle para ele.
 
- O boot loader do JOS é muito simples, ele é escrito em linguagem assembly
-e C.
+ O boot loader do JOS é muito simples, uma parte está escrita em assembly e
+outra em C.
 
  O código em assembly executa as seguintes operações:
 
  1. Desabilita interruções
  2. Coloca 0 nos registradores de segmento
  3. Configura a pilha
- 4. Habilita a linha A20 para poder endereçar 1MB de memória em mode real
+ 4. Habilita a linha A20 (para poder endereçar 1MB de memória)
  5. Entra em modo protegido
  6. Pula para o código em C
 
- A GDT usada para o modo protegido cria dois segmentos, o de código e o
-segmento de dados. Ambos tem base 0 e limite de 4GB, o que significa que
+ A GDT usada para o modo protegido cria dois segmentos, um de código e um
+segmento de dados. Ambos tem base 0 e limite de 4GB, isso significa que
 toda a memória disponível no computador pode ser endereçada.
 
  O código em C do boot loader é igualmente simples, tudo o que ele faz é
-carregar o kernel do disco e chamar o entry point do cabeçalho ELF.
+carregar o kernel do disco rígido e chamar o entry point do cabeçalho ELF.
 
- O kernel é carregado no endereço 0x0010000, e tanto a informação do tamanho
-do kernel quanto o entry point (ie, o código que deve começar a ser
-executado) são lidas do cabeçalho ELF.
+ O kernel é carregado no endereço físico 0x0010000, e tanto a informação
+do tamanho do kernel quanto o entry point (ie, o código que deve começar a
+ser executado) são lidas do cabeçalho ELF.
 
-FIXME: Falar sobre outros boot loaders (grub e lilo)
+ Boot loaders reais, como o GRUB ou LILO, normalmente tem mais estágios.
+O GRUB por exemplo, pode chegar a ter três estágios (1, 1.5 e 2), sendo
+que os primeiros estágios carregam os estágios seguintes e o último vai
+carregar o kernel do disco.
 
 5. Kernel
 ---------
 
- A primeira parte do código do kernel está em assembly, e esse código
-tem que configurar o ambiente para que o código do kernel possa ser
-executado.
+ A primeira parte do código do kernel está em assembly, o objetivo desse
+código é configurar o ambiente para que o código em C possa ser executado.
 
- A configuração mais importante que esse código faz é configurar uma
-outra GDT, essa GDT vai ter o mapeamento necessário para executar o código
-do kernel, isto é, o endereço de ligamento do código do kernel é 0xF0100000
-mas o kernel é carregado no endereço 0x00100000.
+ A mudança mais importante que o código em assembly faz é configurar uma
+nova GDT, a qual vai implementar o mapeamento necessário para o código do
+kernel. Isto é, o endereço de ligamento do kernel é 0xF0100000 mas o kernel
+é carregado no endereço físico 0x00100000.
 
  O que essa GDT faz é mapear todos os endereços gerados pelo kernel para
 o endereço onde o kernel realmente foi carregado.
 
- Por exemplo, digamos que o kernel gere o código 0xF0100007, essa mapeamento
-vai fazer com que o processador acesse o endereço 0x00100007.
+ Por exemplo, logo após configurar a nova GDT, o código em assembly vai
+configurar uma nova pilha e executar a seguinte instrução:
 
-FIXME: Escrever exemplo detalhado
+call    i386_init
+
+ Essa instruçao se traduz em código de máquina como:
+
+f0100038:       e8 fd 00 00 00          call   f010013a <i386_init>
+
+ Ou seja, call tem 0xF010013A como operando e vai fazer um 'call near'.
+Nessa operação, o processador usa este endereço virtual:
+
+0x0008:0xF010013A
+
+ Para transformar o endereço virtual em endereço físico o processador acessa
+o descritor 0x0008 na GDT, e adiciona a base do segmento ao deslocamento
+0xF010013A, dessa maneira temos:
+
+0xF010013A + (-0xF0000000) = 0x0010013A
+
+ O processador então coloca 0x0010013A no barramento de endereços, acessando
+i386_init() no endereço físico correto.
+
+ i386_init() é o ponto de entrada do código em C, ela vai inicializar o BSS
+do kernel com zeros, inicializar a console e chamar monitor(), a qual vai
+esperar por uma entrada do usuário e executar a função desejada.
