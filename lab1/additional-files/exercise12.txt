@@ -1,0 +1,7 @@
+Exercise 12
+-----------
+
+Commit 6437461c52c1559e3f335e1ef5ba4ebb67597600 adds backtrace support to
+JOS. With that commit I'm getting 50/50 from make grade.
+
+Recording that because I'll change the backtrace code.
