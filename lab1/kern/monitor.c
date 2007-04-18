@@ -74,25 +74,13 @@ get_func_name(uintptr_t addr)
 	extern char __STABSTR_BEGIN__[];
 	extern char __STAB_BEGIN__[], __STAB_END__[];
 
-	last = NULL;
-	stab = (struct Stab *) &__STAB_BEGIN__;
+	last = stab = (struct Stab *) &__STAB_BEGIN__;
 	for (; stab < (struct Stab *) &__STAB_END__; stab++) {
 		if (stab->n_type != N_FUN)
 			continue;
 
-		if (addr < stab->n_value) {
-			if (!last) {
-				/*
-				 * FIXME! Ugly hacky
-				 * 
-				 * Symbol _start doesn't seem to be in
-				 * .stab section, this is the only way
-				 * I found to print its name.
-				 */
-				return "_start:";
-			}
+		if (addr < stab->n_value)
 			return (last->n_strx + (char *) &__STABSTR_BEGIN__);
-		}
 
 		last = stab;
 	}
@@ -104,43 +92,27 @@ int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
 	char *p, *fname;
-	uint32_t *ebp, eip;
+	uint32_t *ebp, prev_eip, eip;
 
-	/*
-	 * Print this function info
-	 */
 	ebp = (uint32_t *) read_ebp();
-	eip = read_eip();
-
-	cprintf(" EIP is at [0x%08x] ", eip);
-	fname = get_func_name(eip);
-	for (p = fname; *p != ':'; p++)
-		cputchar(*p);
-
-	cprintf(" args 0x%08x 0x%08x 0x%08x\n", *(ebp + 2), *(ebp + 3),
-		*(ebp + 4));
-
-	/*
-	 * Call chain
-	 */
-
-	ebp = (uint32_t *) *ebp;
-	cprintf("Call trace:\n");
+	prev_eip = read_eip();
 	for (;;) {
 		if (!ebp)
 			return 0;
 
 		eip = *(ebp + 1);
-		fname = get_func_name((uintptr_t) eip);
+		fname = get_func_name(prev_eip);
 		if (!fname)
 			fname = "unknown";
 
-		cprintf("  [0x%08x] ", eip);
+		cprintf("ebp 0x%08x eip 0x%08x (", ebp, eip);
 		for (p = fname; *p != ':'; p++)
 			cputchar(*p);
-		cprintf(" args 0x%08x 0x%08x 0x%08x\n", *(ebp + 2), *(ebp + 3),
-			*(ebp + 4));
+		cprintf(") args 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+			*(ebp + 2), *(ebp + 3), *(ebp + 4), *(ebp + 5),
+			*(ebp + 6));
 
+		prev_eip = eip;
 		ebp = (uint32_t *) *ebp;
 	}
 
