@@ -1,3 +1,13 @@
+/*
+ * stab-dump: Dump JOS kernel symbol table
+ * 
+ * Stab format info at:
+ * http://sources.redhat.com/gdb/onlinedocs/stabs_toc.html
+ * 
+ * Luiz Fernando N. Capitulino
+ * <lcapitulino@gmail.com
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -19,9 +29,9 @@ struct Stab {
 
 int main(int argc, char *argv[])
 {
+	int err, fd;
 	char *stabstr;
 	struct stat buf;
-	int found, err, fd;
 	Elf32_Ehdr *header;
 	Elf32_Shdr *sh, *esh;
 	struct Stab *stab, *estab;
@@ -52,24 +62,25 @@ int main(int argc, char *argv[])
 	}
 	close(fd);
 
-	/* get .stabstr */
+	/*
+	 * Get .stabstr and .stab
+	 * 
+	 * XXX: This code makes the following assumptions:
+	 * 
+	 * 1 .stabstr is the first SHT_STRTAB section
+	 * 2 .stab section is the section that comes before .stabstr
+	 *
+	 * This looks like hardcoded info for me, since we're couting
+	 * on the format of our kernel binary image. But I don't know
+	 * how to make this right.
+	 */
 	sh = (Elf32_Shdr *) ((void *) header + header->e_shoff);
 	esh = sh + header->e_shnum;
 	for (; sh < esh; sh++)
 		if (sh->sh_type == SHT_STRTAB) {
 			stabstr = (char *) ((void *) header + sh->sh_offset);
+			--sh;
 			break;
-		}
-
-	/* get .stab */
-	/* FIXME: we need a way to know when this is .stab header */
-	found = 0;
-	sh = (Elf32_Shdr *) ((void *) header + header->e_shoff);
-	for (; sh < esh; sh++)
-		if (sh->sh_type == SHT_PROGBITS) {
-			if (found == 2)
-				break;
-			found++;
 		}
 
 	stab = (struct Stab *) ((void *) header + sh->sh_offset);
