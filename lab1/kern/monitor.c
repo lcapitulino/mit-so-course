@@ -68,7 +68,7 @@ mon_halt(int argc, char **argv, struct Trapframe *tf)
 }
 
 static char *
-get_func_name(uintptr_t addr)
+get_func_name(uintptr_t addr, uintptr_t *ret)
 {
 	struct Stab *stab, *last;
 	extern char __STABSTR_BEGIN__[];
@@ -79,8 +79,10 @@ get_func_name(uintptr_t addr)
 		if (stab->n_type != N_FUN)
 			continue;
 
-		if (addr < stab->n_value)
+		if (addr < stab->n_value) {
+			*ret = last->n_value;
 			return (last->n_strx + (char *) &__STABSTR_BEGIN__);
+		}
 
 		last = stab;
 	}
@@ -91,29 +93,37 @@ get_func_name(uintptr_t addr)
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
+	int ptrace = 1;
 	char *p, *fname;
+	uintptr_t faddr = 0;
 	uint32_t *ebp, prev_eip, eip;
 
-	ebp = (uint32_t *) read_ebp();
+	cprintf("Kernel backtrace dump:\n");
 	prev_eip = read_eip();
-	for (;;) {
-		if (!ebp)
-			return 0;
+	cprintf("EIP is at [0x%08x] ", prev_eip);
 
+	ebp = (uint32_t *) read_ebp();
+	for (; ebp; ebp = (uint32_t *) *ebp) {
 		eip = *(ebp + 1);
-		fname = get_func_name(prev_eip);
+		fname = get_func_name(prev_eip, &faddr);
 		if (!fname)
 			fname = "unknown";
 
-		cprintf("ebp 0x%08x eip 0x%08x (", ebp, eip);
+		if (!ptrace)
+			cprintf(" [0x%08x] ", faddr);
+
 		for (p = fname; *p != ':'; p++)
 			cputchar(*p);
-		cprintf(") args 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
-			*(ebp + 2), *(ebp + 3), *(ebp + 4), *(ebp + 5),
-			*(ebp + 6));
+
+		cprintf(" args 0x%08x 0x%08x 0x%08x\n", *(ebp + 2), *(ebp + 3),
+			*(ebp + 4));
+
+		if (ptrace) {
+			cprintf("Call trace:\n");
+			ptrace = 0;
+		}
 
 		prev_eip = eip;
-		ebp = (uint32_t *) *ebp;
 	}
 
 	return 0;
