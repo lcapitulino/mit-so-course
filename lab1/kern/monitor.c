@@ -94,7 +94,26 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 	char *p, *fname;
 	uint32_t *ebp, eip;
 
+	/*
+	 * Print this function info
+	 */
 	ebp = (uint32_t *) read_ebp();
+	eip = read_eip();
+
+	cprintf(" EIP is at [0x%08x] ", eip);
+	fname = get_func_name(eip);
+	for (p = fname; *p != ':'; p++)
+		cputchar(*p);
+
+	cprintf(" args 0x%08x 0x%08x 0x%08x\n", *(ebp + 2), *(ebp + 3),
+		*(ebp + 4));
+
+	/*
+	 * Call chain
+	 */
+
+	ebp = (uint32_t *) *ebp;
+	cprintf("Call trace:\n");
 	for (;;) {
 		if (!ebp)
 			return 0;
@@ -104,12 +123,11 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 		if (!fname)
 			fname = "unknown";
 
-		cprintf("ebp 0x%08x eip 0x%08x (", ebp, eip);
+		cprintf("  [0x%08x] ", eip);
 		for (p = fname; *p != ':'; p++)
 			cputchar(*p);
-		cprintf(") args 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
-			*(ebp + 2), *(ebp + 3), *(ebp + 4), *(ebp + 5),
-			*(ebp + 6));
+		cprintf(" args 0x%08x 0x%08x 0x%08x\n", *(ebp + 2), *(ebp + 3),
+			*(ebp + 4));
 
 		ebp = (uint32_t *) *ebp;
 	}
