@@ -86,9 +86,21 @@ int main(int argc, char *argv[])
 	stab = (struct Stab *) ((void *) header + sh->sh_offset);
 	estab = stab + sh->sh_size / sh->sh_entsize;
 	for (; stab < estab; stab++)
-		if (stab->n_type == 0x24)
-			printf("%#x %s\n", stab->n_value,
-			       stab->n_strx + stabstr);
+		if (stab->n_type == 0x24) {
+			char *p;
+
+			printf("%#x ", stab->n_value);
+
+			/* Stab format for functions is:
+			 * 
+			 *     func_name:F(x,y)
+			 * 
+			 * But we're only interested in func_name
+			 */
+			for (p = stab->n_strx + stabstr; *p != ':'; p++)
+				putchar(*p);
+			putchar('\n');
+		}
 
 	munmap(header, buf.st_size);
 	return 0;
