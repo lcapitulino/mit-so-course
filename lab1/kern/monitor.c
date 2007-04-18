@@ -74,13 +74,25 @@ get_func_name(uintptr_t addr)
 	extern char __STABSTR_BEGIN__[];
 	extern char __STAB_BEGIN__[], __STAB_END__[];
 
-	last = stab = (struct Stab *) &__STAB_BEGIN__;
+	last = NULL;
+	stab = (struct Stab *) &__STAB_BEGIN__;
 	for (; stab < (struct Stab *) &__STAB_END__; stab++) {
 		if (stab->n_type != N_FUN)
 			continue;
 
-		if (addr < stab->n_value)
+		if (addr < stab->n_value) {
+			if (!last) {
+				/*
+				 * FIXME! Ugly hacky
+				 * 
+				 * Symbol _start doesn't seem to be in
+				 * .stab section, this is the only way
+				 * I found to print its name.
+				 */
+				return "_start:";
+			}
 			return (last->n_strx + (char *) &__STABSTR_BEGIN__);
+		}
 
 		last = stab;
 	}
