@@ -67,19 +67,50 @@ mon_halt(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
+static char *
+get_func_name(uintptr_t addr)
+{
+	struct Stab *stab, *last;
+	extern char __STABSTR_BEGIN__[];
+	extern char __STAB_BEGIN__[], __STAB_END__[];
+
+	last = stab = (struct Stab *) &__STAB_BEGIN__;
+	for (; stab < (struct Stab *) &__STAB_END__; stab++) {
+		if (stab->n_type != N_FUN)
+			continue;
+
+		if (addr < stab->n_value)
+			return (last->n_strx + (char *) &__STABSTR_BEGIN__);
+
+		last = stab;
+	}
+
+	return NULL;
+}
+
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-	uint32_t *ebp;
+	char *p, *fname;
+	uint32_t *ebp, eip;
 
 	ebp = (uint32_t *) read_ebp();
 	for (;;) {
 		if (!ebp)
 			return 0;
 
-		cprintf("ebp %08x eip %08x args %08x %08x %08x %08x %08x\n",
-			ebp, *(ebp + 1), *(ebp + 2), *(ebp + 3), *(ebp + 4),
-			*(ebp + 5), *(ebp + 6));
+		eip = *(ebp + 1);
+		fname = get_func_name((uintptr_t) eip);
+		if (!fname)
+			fname = "unknown";
+
+		cprintf("ebp 0x%08x eip 0x%08x (", ebp, eip);
+		for (p = fname; *p != ':'; p++)
+			cputchar(*p);
+		cprintf(") args 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+			*(ebp + 2), *(ebp + 3), *(ebp + 4), *(ebp + 5),
+			*(ebp + 6));
+
 		ebp = (uint32_t *) *ebp;
 	}
 
@@ -92,6 +123,11 @@ mon_symtab(int argc, char **argv, struct Trapframe *tf)
 	struct Stab *stab;
 	extern char __STABSTR_BEGIN__[];
 	extern char __STAB_BEGIN__[], __STAB_END__[];
+
+	/* 
+	 * XXX: is it possible to share code with
+	 * get_func_name() ?
+	 */
 
 	stab = (struct Stab *) &__STAB_BEGIN__;
 	for (; stab < (struct Stab *) &__STAB_END__; stab++)
