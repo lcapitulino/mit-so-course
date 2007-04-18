@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
 	struct stat buf;
 	int found, err, fd;
 	Elf32_Ehdr *header;
-	struct Stab *stab, *estab;
 	Elf32_Shdr *sh, *esh;
+	struct Stab *stab, *estab;
 
 	if (argc != 2) {
 		printf("usage: %s < file >\n", argv[0]);
@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 		}
 
 	/* get .stab */
+	/* FIXME: we need a way to know when this is .stab header */
 	found = 0;
 	sh = (Elf32_Shdr *) ((void *) header + header->e_shoff);
 	for (; sh < esh; sh++)
