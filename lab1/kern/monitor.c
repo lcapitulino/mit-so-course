@@ -6,6 +6,7 @@
 #include <inc/memlayout.h>
 #include <inc/assert.h>
 #include <inc/x86.h>
+#include <inc/stab.h>
 
 #include <kern/console.h>
 #include <kern/monitor.h>
@@ -25,6 +26,7 @@ static struct Command commands[] = {
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "symtab", "Display symbol table", mon_symtab },
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -84,6 +86,34 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
+int
+mon_symtab(int argc, char **argv, struct Trapframe *tf)
+{
+	struct Stab *stab;
+	extern char __STABSTR_BEGIN__[];
+	extern char __STAB_BEGIN__[], __STAB_END__[];
+
+	stab = (struct Stab *) &__STAB_BEGIN__;
+	for (; stab < (struct Stab *) &__STAB_END__; stab++)
+		if (stab->n_type == N_FUN) {
+			char *p;
+
+			cprintf("%#x ", stab->n_value);
+
+
+			/* Stab format for functions is:
+			 * 
+			 *     func_name:F(x,y)
+			 * 
+			 * But we're only interested in func_name
+			 */
+			for (p = stab->n_strx + (char *) &__STABSTR_BEGIN__;
+			     *p != ':'; p++)
+				cputchar(*p);
+			cputchar('\n');
+		}
+	return 0;
+}
 
 
 /***** Kernel monitor command interpreter *****/

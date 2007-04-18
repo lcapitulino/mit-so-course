@@ -39,6 +39,7 @@ void
 cmain(void)
 {
 	struct Proghdr *ph, *eph;
+	struct Secthdr *sh, *esh;
 
 	// read 1st page off disk
 	readseg((uint32_t) ELFHDR, SECTSIZE*8, 0);
@@ -52,6 +53,25 @@ cmain(void)
 	eph = ph + ELFHDR->e_phnum;
 	for (; ph < eph; ph++)
 		readseg(ph->p_va, ph->p_memsz, ph->p_offset);
+
+	// load .stabstr and .stab
+	// 
+	// XXX: This code makes the following assumptions:
+	// 
+	// 1 .stabstr is the first SHT_STRTAB section
+	// 2 .stab section is the section that comes before .stabstr
+	//
+	// This looks like hardcoded info for me, since we're couting
+	// on the format of our kernel binary image. But I don't know
+	// how to make this right.
+	sh = (struct Secthdr *) ((uint8_t *) ELFHDR + ELFHDR->e_shoff);
+	esh = sh + ELFHDR->e_shnum;
+	for (; sh < esh; sh++)
+		if (sh->sh_type == ELF_SHT_STRTAB) {
+			readseg(sh->sh_addr, sh->sh_size, sh->sh_offset);
+			--sh;
+			readseg(sh->sh_addr, sh->sh_size, sh->sh_offset);
+		}
 
 	// call the entry point from the ELF header
 	// note: does not return!
