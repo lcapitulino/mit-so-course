@@ -68,36 +68,13 @@ mon_halt(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
-static char *
-get_func_name(uintptr_t addr, uintptr_t *ret)
-{
-	struct Stab *stab, *last;
-	extern char __STABSTR_BEGIN__[];
-	extern char __STAB_BEGIN__[], __STAB_END__[];
-
-	last = stab = (struct Stab *) &__STAB_BEGIN__;
-	for (; stab < (struct Stab *) &__STAB_END__; stab++) {
-		if (stab->n_type != N_FUN)
-			continue;
-
-		if (addr < stab->n_value) {
-			*ret = last->n_value;
-			return (last->n_strx + (char *) &__STABSTR_BEGIN__);
-		}
-
-		last = stab;
-	}
-
-	return NULL;
-}
-
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
+	const char *p;
 	int ptrace = 1;
-	char *p, *fname;
-	uintptr_t faddr = 0;
 	uint32_t *ebp, prev_eip, eip;
+	struct Eipdebuginfo dbg_eip;
 
 	cprintf("Kernel backtrace dump:\n");
 	prev_eip = read_eip();
@@ -106,14 +83,13 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 	ebp = (uint32_t *) read_ebp();
 	for (; ebp; ebp = (uint32_t *) *ebp) {
 		eip = *(ebp + 1);
-		fname = get_func_name(prev_eip, &faddr);
-		if (!fname)
-			fname = "unknown";
+
+		debuginfo_eip(prev_eip, &dbg_eip);
 
 		if (!ptrace)
-			cprintf(" [0x%08x] ", faddr);
+			cprintf(" [0x%08x] ", dbg_eip.eip_fn_addr);
 
-		for (p = fname; *p != ':'; p++)
+		for (p = dbg_eip.eip_fn_name; *p != ':'; p++)
 			cputchar(*p);
 
 		cprintf(" args 0x%08x 0x%08x 0x%08x\n", *(ebp + 2), *(ebp + 3),
@@ -137,18 +113,12 @@ mon_symtab(int argc, char **argv, struct Trapframe *tf)
 	extern char __STABSTR_BEGIN__[];
 	extern char __STAB_BEGIN__[], __STAB_END__[];
 
-	/* 
-	 * XXX: is it possible to share code with
-	 * get_func_name() ?
-	 */
-
 	stab = (struct Stab *) &__STAB_BEGIN__;
 	for (; stab < (struct Stab *) &__STAB_END__; stab++)
 		if (stab->n_type == N_FUN) {
 			char *p;
 
 			cprintf("%#x ", stab->n_value);
-
 
 			/* Stab format for functions is:
 			 * 
@@ -161,6 +131,7 @@ mon_symtab(int argc, char **argv, struct Trapframe *tf)
 				cputchar(*p);
 			cputchar('\n');
 		}
+
 	return 0;
 }
 
