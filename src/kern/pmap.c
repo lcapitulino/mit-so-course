@@ -214,9 +214,6 @@ i386_vm_init(void)
 	uint32_t cr0;
 	size_t n;
 
-	// Remove this line when you're ready to test this function.
-	panic("i386_vm_init: This function is not finished\n");
-
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	pgdir = boot_alloc(PGSIZE, PGSIZE);
@@ -244,7 +241,8 @@ i386_vm_init(void)
 	//     * [KSTACKTOP-KSTKSIZE, KSTACKTOP) -- backed by physical memory
 	//     * [KSTACKTOP-PTSIZE, KSTACKTOP-KSTKSIZE) -- not backed => faults
 	//     Permissions: kernel RW, user NONE
-	// Your code goes here:
+	boot_map_segment(pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE,
+			 PADDR(bootstack), PTE_W);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE. 
@@ -253,7 +251,7 @@ i386_vm_init(void)
 	// We might not have 2^32 - KERNBASE bytes of physical memory, but
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
-	// Your code goes here: 
+	boot_map_segment(pgdir, KERNBASE, 0xFFFFFFFF - KERNBASE, 0, PTE_W);
 
 	//////////////////////////////////////////////////////////////////////
 	// Make 'pages' point to an array of size 'npage' of 'struct Page'.
@@ -266,7 +264,11 @@ i386_vm_init(void)
 	// Permissions:
 	//    - pages -- kernel RW, user NONE
 	//    - the read-only version mapped at UPAGES -- kernel R, user R
-	// Your code goes here: 
+	n = npage * sizeof(struct Page);
+	pages = (struct Page *) boot_alloc(n, PGSIZE);
+	memset(pages, 0, n);
+
+	boot_map_segment(pgdir, UPAGES, n, PADDR(pages), PTE_U);
 
 	// Check that the initial page directory has been set up correctly.
 	check_boot_pgdir();
