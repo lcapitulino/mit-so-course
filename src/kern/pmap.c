@@ -187,6 +187,12 @@ boot_pgdir_walk(pde_t *pgdir, uintptr_t la, int create)
 static void
 boot_map_segment(pde_t *pgdir, uintptr_t la, size_t size, physaddr_t pa, int perm)
 {
+	size_t i;
+
+	for (i = 0; i < size; i += PGSIZE) {
+		pte_t *pte = boot_pgdir_walk(pgdir, la + i, 1);
+		*pte = PTE_ADDR(pa + i)|perm|PTE_P;
+	}
 }
 
 // Set up a two-level page table:
