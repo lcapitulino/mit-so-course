@@ -85,6 +85,7 @@ i386_detect_memory(void)
 // --------------------------------------------------------------
 
 static void check_boot_pgdir(void);
+static void dump_pgdir(pde_t *pgdir);
 
 //
 // Allocate n bytes of physical memory aligned on an 
@@ -393,6 +394,22 @@ check_va2pa(pde_t *pgdir, uintptr_t va)
 		return ~0;
 	return PTE_ADDR(p[PTX(va)]);
 }
+
+static void
+dump_pgdir(pde_t *pgdir)
+{
+	int i;
+	pde_t *pde;
+
+	for (i = 0; i < NPDENTRIES; i++) {
+		pde = &pgdir[i];
+		if (!*pde)
+			continue;
+
+		cprintf("[%d] %08x (%08x)\n", i, *pde, KADDR(PTE_ADDR(*pde)));
+	}
+}
+
 		
 // --------------------------------------------------------------
 // Tracking of physical pages.
