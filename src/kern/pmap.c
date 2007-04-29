@@ -99,6 +99,7 @@ static void*
 boot_alloc(uint32_t n, uint32_t align)
 {
 	extern char end[];
+	uint32_t mod;
 	void *v;
 
 	// Initialize boot_freemem if this is the first time.
@@ -109,13 +110,22 @@ boot_alloc(uint32_t n, uint32_t align)
 	if (boot_freemem == 0)
 		boot_freemem = end;
 
-	// LAB 2: Your code here:
-	//	Step 1: round boot_freemem up to be aligned properly
-	//	Step 2: save current value of boot_freemem as allocated chunk
-	//	Step 3: increase boot_freemem to record allocation
-	//	Step 4: return allocated chunk
+	// Check if align is a power of two
+	if (align <= 0 || (align & (align - 1)))
+		panic("align (%d) is not a power of two\n", align);
 
-	return NULL;
+	// align boot_freemem
+	mod = ((uint32_t) boot_freemem) % align;
+	if (mod)
+		boot_freemem += (align - mod);
+
+	// Allocate and return allocated chunk
+	v = boot_freemem;
+	boot_freemem += n;
+	if (PADDR(boot_freemem) > maxpa)
+		panic("Out of memory (0x%08x)\n", boot_freemem);
+
+	return v;
 }
 
 //
