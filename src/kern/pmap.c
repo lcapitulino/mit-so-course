@@ -155,7 +155,25 @@ boot_alloc(uint32_t n, uint32_t align)
 static pte_t*
 boot_pgdir_walk(pde_t *pgdir, uintptr_t la, int create)
 {
-	return 0;
+	pde_t *pde, *pte;
+
+	if (!pgdir)
+		panic("pgdir is NULL\n");
+
+	pde = &pgdir[PDX(la)];
+	if (*pde) {
+		pte = (pte_t *) KADDR(PTE_ADDR(*pde));
+		return ((pte_t *) pte + PTX(la));
+	}
+
+	if (!create)
+		return 0;
+
+	pte = (pte_t *) boot_alloc(PGSIZE, PGSIZE);
+	memset(pte, 0, PGSIZE);
+	*pde = PTE_ADDR(PADDR(pte))|PTE_W|PTE_P;
+
+	return ((pte_t *) pte + PTX(la));
 }
 
 //
