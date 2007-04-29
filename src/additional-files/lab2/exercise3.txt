@@ -1,0 +1,7 @@
+Exercise 3
+----------
+
+Implement the following functions in kern/pmap.c: boot_alloc(),
+boot_pgdir_walk(), boot_map_segment(), i386_vm_init()
+
+ Implementation finished at commit b51d4b9d2264838ed3f5f51527867c5b7447c086
