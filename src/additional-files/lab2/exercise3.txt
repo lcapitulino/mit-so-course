@@ -5,3 +5,85 @@ Implement the following functions in kern/pmap.c: boot_alloc(),
 boot_pgdir_walk(), boot_map_segment(), i386_vm_init()
 
  Implementation finished at commit b51d4b9d2264838ed3f5f51527867c5b7447c086
+
+Q1: What entries (rows) in the page directory have been filled in at this
+point? What addresses do they map and where do they point?
+
+ [Note sure whether this' what the question is about]
+
+index   base addres  Points to (logically)
+
+[956]   ef000000     f016e000
+[957]   ef400000     f0114000
+[958]   ef800000     f0115000
+[959]   efc00000     f0114000
+[960]   f0000000     f0116000
+[961]   f0400000     f0117000
+[962]   f0800000     f0118000
+[963]   f0c00000     f0119000
+[964]   f1000000     f011a000
+[965]   f1400000     f011b000
+[966]   f1800000     f011c000
+[967]   f1c00000     f011d000
+[968]   f2000000     f011e000
+[969]   f2400000     f011f000
+[970]   f2800000     f0120000
+[971]   f2c00000     f0121000
+[972]   f3000000     f0122000
+[973]   f3400000     f0123000
+[974]   f3800000     f0124000
+[975]   f3c00000     f0125000
+[976]   f4000000     f0126000
+[977]   f4400000     f0127000
+[978]   f4800000     f0128000
+[979]   f4c00000     f0129000
+[980]   f5000000     f012a000
+[981]   f5400000     f012b000
+[982]   f5800000     f012c000
+[983]   f5c00000     f012d000
+[984]   f6000000     f012e000
+[985]   f6400000     f012f000
+[986]   f6800000     f0130000
+[987]   f6c00000     f0131000
+[988]   f7000000     f0132000
+[989]   f7400000     f0133000
+[990]   f7800000     f0134000
+[991]   f7c00000     f0135000
+[992]   f8000000     f0136000
+[993]   f8400000     f0137000
+[994]   f8800000     f0138000
+[995]   f8c00000     f0139000
+[996]   f9000000     f013a000
+[997]   f9400000     f013b000
+[998]   f9800000     f013c000
+[999]   f9c00000     f013d000
+[1000]  fa000000     f013e000
+[1001]  fa400000     f013f000
+[1002]  fa800000     f0140000
+[1003]  fac00000     f0141000
+[1004]  fb000000     f0142000
+[1005]  fb400000     f0143000
+[1006]  fb800000     f0144000
+[1007]  fbc00000     f0145000
+[1008]  fc000000     f0146000
+[1009]  fc400000     f0147000
+[1010]  fc800000     f0148000
+[1011]  fcc00000     f0149000
+[1012]  fd000000     f014a000
+[1013]  fd400000     f014b000
+[1014]  fd800000     f014c000
+[1015]  fdc00000     f014d000
+[1016]  fe000000     f014e000
+[1017]  fe400000     f014f000
+[1018]  fe800000     f0150000
+[1019]  fec00000     f0151000
+[1020]  ff000000     f0152000
+[1021]  ff400000     f0153000
+[1022]  ff800000     f0154000
+[1023]  ffc00000     f0155000
+
+Q2: In i386_vm_init(), after check_boot_page_directory, we map the first
+entry of the page directory to the page table of the first four MB of
+RAM, but delete this mapping at the end of the function. Why is this
+necessary? What would happen if it were omitted? Does this actually limit
+our kernel to be 4MB? What must be true if our kernel were larger than 4MB?
