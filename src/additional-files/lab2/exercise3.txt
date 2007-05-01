@@ -87,3 +87,67 @@ entry of the page directory to the page table of the first four MB of
 RAM, but delete this mapping at the end of the function. Why is this
 necessary? What would happen if it were omitted? Does this actually limit
 our kernel to be 4MB? What must be true if our kernel were larger than 4MB?
+
+-> FIXME: Cleanup, this' a bit confuse.
+
+ This is necessary because between the code that turns on paging and the end
+of i386_vm_init(), the apping will pass a physical address to the paging unit.
+
+ For example, right after the paging is enabled, there's an instruction
+to load the global description table:
+
+f01011ae:       0f 01 15 50 33 11 f0    lgdtl  0xf0113350
+
+ 0xf0113350 is the address of a structure in memory that the lgdt
+instruction takes as its operand.
+
+ If the page directory's first entry is not set, this would happen:
+
+	1. Kernel issues DS:0xf0113550 
+
+	2. This address is passed to the segmentation unit, which reads the
+	   base address from the DS segment descriptor and adds it to the
+	   issued address, like this:
+
+		-0xf0000000 + 0xf0113550 = 0x00113550
+
+	3. The resulting value will be passed to the paging unit, which
+	   will brake it into a page directory index, a page table index,
+	   and an offset, like this:
+
+		Page directory index: 0
+		Page table index:     275
+		Offset:               1360
+
+	4. The paging unit will access page directory's entry 0, will check
+	   for the Present bit and will fail, since this bit isn't set
+
+ The problem here is that the boot code has configured segmentation so that
+it performs the virtual to physical mapping. So, what's happening is that
+we're passing a physical address to the paging unit and it doesn't know how
+to map it.
+
+ Note that this problem exists just for a few lines of code. When the new
+segment descriptors setup is finished, a linear address will be passed to
+the paging unit and it will handle the linear address accordingly.
+
+ The temporary solution then is to setup paging so that it knows how to
+translate physical to physical.
+
+ This solution is achieved by seting the first entry of the page directory
+with the same page table that is used to map kernel address.
+
+ Using the above example, the processor would perform the same for steps
+1, 2 and 3, but for 4 it will do:
+
+	4. The paging unit will access page directory entry 0, and retrieve
+	   the physical address of the page table used to translate kernel
+	   addresses under the first 4MB of memory
+
+	5. It will access the page table just retrieved, and access its 275
+	   position, which will bring the correct page for virtual address
+	   0xf0113550
+
+ The only problem is that our kernel IS limited to 4MB of memory, because
+page directory's entry 1 is not mapped. So, addresses up to 4MB will case
+faults. The way to fix it is to map the next page directory entry.
