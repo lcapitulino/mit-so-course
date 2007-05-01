@@ -138,16 +138,24 @@ translate physical to physical.
 with the same page table that is used to map kernel address.
 
  Staying with the same example and considering the solution just explained,
-the processor would perform the same for steps 1 through 3, but the next
+the processor would perform the same for steps 1 through 3, but the following
 steps are different:
 
 	4. The paging unit will read page directory's entry 0, and retrieve
 	   the physical address of the page table used to translate the
 	   first 4MB of kernel addresses
 
-	5. It will access the page table just retrieved, and read its 275
-	   position, which will bring the correct page for linear address
-	   0xf0113550
+	5. The paging unit will access the page table just retrieved, and
+	   read its 275 position, which will bring 0x00113000 as the page
+	   frame physical address
+
+	6. The paging unit will then add the offset part of the address to
+	   the page frame address, to form a physical address. Like this:
+
+		0x00113000  + 1360  =      0x00113550
+		page frame   offset     physical address
+
+	7. The physical address 0x00113550 is put on the address bus
 
  The only problem with that solution, is that our kernel IS limited to 4MB of
 memory, because page directory's entry 1 is not mapped. So, addresses up to
