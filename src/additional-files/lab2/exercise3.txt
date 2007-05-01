@@ -161,3 +161,13 @@ steps are different:
 memory, because page directory's entry 1 is not mapped. So, addresses up to
 4MB will case faults. The way to fix this is to map the next page directory's
 entry as well.
+
+Q3: (From Lecture 4) We have placed the kernel and user environment in the
+same address space. Why will user programs not be able to read or write the
+kernel's memory? What specific mechanisms protect the kernel memory?
+
+ The mechanism that protects the kernel's memory is the processor's page-level
+protection.
+
+ All the kernel's pages has the Supervisor bit set, which means that they're
+only readable/writable from kernel mode (CPL 0, 1 and 2).
