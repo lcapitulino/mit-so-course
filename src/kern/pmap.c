@@ -185,10 +185,13 @@ boot_pgdir_walk(pde_t *pgdir, uintptr_t la, int create)
 		panic("pgdir is NULL\n");
 
 	pde = &pgdir[PDX(la)];
-	if (*pde) {
+	if (*pde & PTE_P) {
 		pte = (pte_t *) KADDR(PTE_ADDR(*pde));
 		return ((pte_t *) pte + PTX(la));
 	}
+
+	if (*pde)
+		panic("Entry %08x has data w/o PTE_P set\n", *pde);
 
 	if (!create)
 		return 0;
