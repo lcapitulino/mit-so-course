@@ -54,6 +54,29 @@ struct Pseudodesc gdt_pd = {
 	sizeof(gdt) - 1, (unsigned long) gdt
 };
 
+static int pse_support;
+
+static void
+enable_pse(void)
+{
+	uint32_t cr4;
+
+	cr4 = rcr4();
+	cr4 |= CR4_PSE;
+	lcr4(cr4);
+}
+
+static void
+cpu_check_pse(void)
+{
+	uint32_t edx = 0;
+	const uint32_t pse_bit = 0x8;
+
+	cpuid(1, NULL, NULL, NULL, &edx);
+	if (edx & pse_bit)
+		pse_support = 1;
+}
+
 static int
 nvram_read(int r)
 {
@@ -196,6 +219,20 @@ boot_map_segment(pde_t *pgdir, uintptr_t la, size_t size, physaddr_t pa, int per
 	}
 }
 
+static void
+boot_map_pse_segment(pde_t *pgdir, uintptr_t la, size_t size, physaddr_t pa, int perm)
+{
+	size_t i;
+
+	for (i = 0; i < size; i += PTSIZE) {
+		pde_t *pde = &pgdir[PDX(la + i)];
+		if (*pde & PTE_P)
+			panic("Entry: %08x already in use\n", *pde);
+
+		*pde = PTE_PS_ADDR(pa + i)|perm|PTE_PS|PTE_P;
+	}
+}
+
 // Set up a two-level page table:
 //    boot_pgdir is its linear (virtual) address of the root
 //    boot_cr3 is the physical adresss of the root
@@ -214,6 +251,8 @@ i386_vm_init(void)
 	pde_t* pgdir;
 	uint32_t cr0;
 	size_t n;
+
+	cpu_check_pse();
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -252,7 +291,12 @@ i386_vm_init(void)
 	// We might not have 2^32 - KERNBASE bytes of physical memory, but
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
-	boot_map_segment(pgdir, KERNBASE, 0xFFFFFFFF - KERNBASE, 0, PTE_W);
+	if (pse_support)
+		boot_map_pse_segment(pgdir, KERNBASE, 0xFFFFFFFF - KERNBASE,
+				     0, PTE_W);
+	else
+		boot_map_segment(pgdir, KERNBASE, 0xFFFFFFFF - KERNBASE, 0,
+				 PTE_W);
 
 	//////////////////////////////////////////////////////////////////////
 	// Make 'pages' point to an array of size 'npage' of 'struct Page'.
@@ -295,6 +339,10 @@ i386_vm_init(void)
 	// Install page table.
 	lcr3(boot_cr3);
 
+	// Turn on page size extensions
+	if (pse_support)
+		enable_pse();
+
 	// Turn on paging.
 	cr0 = rcr0();
 	cr0 |= CR0_PE|CR0_PG|CR0_AM|CR0_WP|CR0_NE|CR0_TS|CR0_EM|CR0_MP;
@@ -333,6 +381,7 @@ i386_vm_init(void)
 // but it is a pretty good sanity check. 
 //
 static physaddr_t check_va2pa(pde_t *pgdir, uintptr_t va);
+static physaddr_t check_pse_va2pa(pde_t *pgdir, uintptr_t va);
 
 static void
 check_boot_pgdir(void)
@@ -349,8 +398,12 @@ check_boot_pgdir(void)
 	
 
 	// check phys mem
-	for (i = 0; KERNBASE + i != 0; i += PGSIZE)
-		assert(check_va2pa(pgdir, KERNBASE + i) == i);
+	if (pse_support)
+		for (i = 0; KERNBASE + i != 0; i += PTSIZE)
+			assert(check_pse_va2pa(pgdir, KERNBASE + i) == i);
+	else
+		for (i = 0; KERNBASE + i != 0; i += PGSIZE)
+			assert(check_va2pa(pgdir, KERNBASE + i) == i);
 
 	// check kernel stack
 	for (i = 0; i < KSTKSIZE; i += PGSIZE)
@@ -393,6 +446,16 @@ check_va2pa(pde_t *pgdir, uintptr_t va)
 	if (!(p[PTX(va)] & PTE_P))
 		return ~0;
 	return PTE_ADDR(p[PTX(va)]);
+}
+
+static physaddr_t
+check_pse_va2pa(pde_t *pgdir, uintptr_t va)
+{
+	pgdir = &pgdir[PDX(va)];
+	if (!(*pgdir & PTE_P))
+		return ~0;
+
+	return PTE_PS_ADDR(*pgdir);
 }
 
 static void

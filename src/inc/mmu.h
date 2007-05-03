@@ -77,6 +77,9 @@
 // address in page table entry
 #define PTE_ADDR(pte)	((physaddr_t) (pte) & ~0xFFF)
 
+// page address in the page directory when PSE is enabled
+#define PTE_PS_ADDR(pte)	((physaddr_t) (pte) & 0xFFC00000)
+
 // Control Register flags
 #define CR0_PE		0x00000001	// Protection Enable
 #define CR0_MP		0x00000002	// Monitor coProcessor
