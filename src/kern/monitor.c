@@ -11,6 +11,7 @@
 #include <kern/console.h>
 #include <kern/monitor.h>
 #include <kern/kdebug.h>
+#include <kern/pmap.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
@@ -27,6 +28,7 @@ static struct Command commands[] = {
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "showmap", "Display virtual to physical mapping", mon_showmap },
 	{ "symtab", "Display symbol table", mon_symtab },
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
@@ -95,6 +97,103 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 		eip = *(ebp + 1);
 	}
 
+	return 0;
+}
+
+static void
+dump_pde_flags(pde_t *pde)
+{
+	cprintf(" pde:");
+	if (*pde & PTE_PS)
+		cprintf(" PS");
+	if (*pde & PTE_A)
+		cprintf(" A");
+	if (*pde & PTE_PCD)
+		cprintf(" PCD");
+	if (*pde & PTE_PWT)
+		cprintf(" PWT");
+	if (*pde & PTE_U)
+		cprintf(" U");
+	else
+		cprintf(" S");
+	if (*pde & PTE_W)
+		cprintf(" W");
+	else
+		cprintf(" R");
+	if (*pde & PTE_P)
+		cprintf(" P");
+	cputchar('\n');
+}
+
+static void
+dump_pte_flags(pte_t *pte)
+{
+	cprintf(" pte:");
+	if (*pte & PTE_G)
+		cprintf(" G");
+	if (*pte & PTE_PAT)
+		cprintf(" PTA");
+	if (*pte & PTE_D)
+		cprintf(" D");
+	if (*pte & PTE_A)
+		cprintf(" A");
+	if (*pte & PTE_PCD)
+		cprintf(" PCD");
+	if (*pte & PTE_PWT)
+		cprintf(" PWT");
+	if (*pte & PTE_U)
+		cprintf(" U");
+	else
+		cprintf(" S");
+	if (*pte & PTE_W)
+		cprintf(" W");
+	else
+		cprintf(" R");
+	if (*pte & PTE_P)
+		cprintf(" P");
+	cputchar('\n');
+}
+
+int
+mon_showmap(int argc, char **argv, struct Trapframe *tf)
+{
+	int i;
+
+	for (i = 1; i < argc; i++) {
+		pde_t *pde, *pte;
+		uintptr_t va, ph;
+
+		va = strtol(argv[i], NULL, 16);
+
+		pde = boot_pgdir + PDX(va);
+		if (!(*pde & PTE_P)) {
+			cprintf("\n0x%08x not mapped\n", va);
+			continue;
+		}
+
+		pte = 0;
+
+		if (!(*pde & PTE_PS)) {
+			pte = (pte_t *) KADDR(PTE_ADDR(*pde));
+			pte += PTX(va);
+			if (!(*pte & PTE_P)) {
+				cprintf("\n0x%08x not mapped\n", va);
+				continue;
+			}
+			ph = PTE_ADDR(*pte);
+		} else {
+			ph = PTE_PS_ADDR(*pde);
+		}
+
+		cprintf("\n0x%08x -> 0x%08x\n", va, ph);
+
+		// dump PDE and PTE flags
+		dump_pde_flags(pde);
+		if (pte)
+			dump_pte_flags(pte);
+	}
+
+	cputchar('\n');
 	return 0;
 }
 

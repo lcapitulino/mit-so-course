@@ -65,6 +65,8 @@
 #define PTE_A		0x020	// Accessed
 #define PTE_D		0x040	// Dirty
 #define PTE_PS		0x080	// Page Size
+#define PTE_PAT         0x080   // Page Table Attribute Index
+#define PTE_G           0x100   // Global page
 #define PTE_MBZ		0x180	// Bits must be zero
 
 // The PTE_AVAIL bits aren't used by the kernel or interpreted by the
