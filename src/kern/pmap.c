@@ -570,7 +570,10 @@ page_alloc(struct Page **pp_store)
 void
 page_free(struct Page *pp)
 {
-	// Fill this function in
+	if (pp->pp_ref)
+		return;
+
+	LIST_INSERT_HEAD(&page_free_list, pp, pp_link);
 }
 
 //
