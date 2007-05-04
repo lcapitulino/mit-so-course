@@ -314,7 +314,6 @@ i386_vm_init(void)
 	//    - the read-only version mapped at UPAGES -- kernel R, user R
 	n = npage * sizeof(struct Page);
 	pages = (struct Page *) boot_alloc(n, PGSIZE);
-	memset(pages, 0, n);
 
 	boot_map_segment(pgdir, UPAGES, n, PADDR(pages), PTE_U);
 
