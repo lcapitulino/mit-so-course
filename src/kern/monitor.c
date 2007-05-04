@@ -26,6 +26,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "alloc_page", "Allocate a physical page", mon_alloc_page },
 	{ "backtrace", "Show backtrace", mon_backtrace },
+	{ "free_page", "Free an allocated page", mon_free_page },
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
@@ -79,6 +80,23 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 	cprintf("  end    %08x (virt)  %08x (phys)\n", end, end - KERNBASE);
 	cprintf("Kernel executable memory footprint: %dKB\n",
 		(end-_start+1023)/1024);
+	return 0;
+}
+
+int
+mon_free_page(int argc, char **argv, struct Trapframe *tf)
+{
+	struct Page *pp;
+	physaddr_t ph;
+
+	if (argc != 2) {
+		cprintf("Usage: free_page <page_phys_addr>\n");
+		return 0;
+	}
+
+	ph = (physaddr_t) strtol(argv[1], NULL, 16);
+	pp = pa2page(ph);
+	page_free(pp);
 	return 0;
 }
 
