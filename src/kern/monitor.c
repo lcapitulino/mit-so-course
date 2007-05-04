@@ -29,6 +29,7 @@ static struct Command commands[] = {
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "page_status", "Display page status", mon_page_status },
 	{ "pse", "Display PSE information", mon_pse },
 	{ "showmap", "Display virtual to physical mapping", mon_showmap },
 	{ "symtab", "Display symbol table", mon_symtab },
@@ -173,6 +174,28 @@ dump_pte_flags(pte_t *pte)
 	if (*pte & PTE_P)
 		cprintf(" P");
 	cprintf(" ]\n");
+}
+
+int
+mon_page_status(int argc, char **argv, struct Trapframe *tf)
+{
+	struct Page *pp;
+	physaddr_t ph;
+
+	if (argc != 2) {
+		cprintf("Usage: page_status <page_phys_addr>\n");
+		return 0;
+	}
+
+	ph = (physaddr_t) strtol(argv[1], NULL, 16);
+	LIST_FOREACH(pp, &page_free_list, pp_link)
+		if (page2pa(pp) == ph) {
+			cprintf("free\n");
+			return 0;
+		}
+
+	cprintf("allocated\n");
+	return 0;
 }
 
 int

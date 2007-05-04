@@ -36,6 +36,7 @@
 
 
 extern int pse_support;
+extern struct Page_list page_free_list;
 
 extern char bootstacktop[], bootstack[];
 
