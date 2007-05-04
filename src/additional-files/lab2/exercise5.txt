@@ -1,0 +1,8 @@
+Exercise 5
+==========
+
+In the file kern/pmap.c, you must implement code for the five functions:
+page_init(), page_alloc(), page_free(), pgdir_walk(), page_insert(),
+page_remove()
+
+Finished implementation at commit: 43d859f92b33cf4cedf59fd041407a3d376efb9c
