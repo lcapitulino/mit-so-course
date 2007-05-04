@@ -1,0 +1,17 @@
+Many doubts... OMG
+==================
+
+o PSE was implemented and is working, but all the page handling functions
+  ignores it and assumes 4KB pages. Is it a problem?
+
+o The UPAGES mapping has the following permissions:
+
+	pde: 0x00130003 [ 0x00130000 S W P ]
+	pte: 0x00118005 [ 0x00118000 U R P ]
+
+  According to Intel manuals, the final permission will be:
+
+	Supervisor Read-Write
+
+  Then users won't have permissions to read the page. Is this right?
+  Should this be changed?
