@@ -652,7 +652,31 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 int
 page_insert(pde_t *pgdir, struct Page *pp, void *va, int perm) 
 {
-	// Fill this function in
+	pte_t *pte;
+	int inval = 0;
+
+	pp->pp_ref++;
+
+	pte = pgdir_walk(pgdir, va, 0);
+	if (pte) {
+		// PTE exists
+		if (*pte & PTE_P) {
+			page_remove(pgdir, va);
+			inval = 1;
+		}
+	} else {
+		pte = pgdir_walk(pgdir, va, 1);
+		if (!pte) {
+			pp->pp_ref--;
+			return -E_NO_MEM;
+		}
+	}
+
+	*pte = PTE_ADDR(page2pa(pp))|perm|PTE_P;
+
+	if (inval)
+		tlb_invalidate(pgdir, va);
+
 	return 0;
 }
 
