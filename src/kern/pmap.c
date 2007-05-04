@@ -505,9 +505,19 @@ page_init(void)
 	//
 	// Change the code to reflect this.
 	int i;
+
 	LIST_INIT(&page_free_list);
-	for (i = 0; i < npage; i++) {
-		pages[i].pp_ref = 0;
+
+	pages[0].pp_ref = 0;
+
+	for (i = 1; i < npage; i++) {
+
+		if ((page2pa(&pages[i]) >= IOPHYSMEM) &&
+		    (page2pa(&pages[i]) < PADDR(boot_freemem))) {
+			pages[i].pp_ref = 0;
+			continue;
+		}
+
 		LIST_INSERT_HEAD(&page_free_list, &pages[i], pp_link);
 	}
 }
