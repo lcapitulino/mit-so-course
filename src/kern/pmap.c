@@ -605,8 +605,29 @@ page_decref(struct Page* pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
-	// Fill this function in
-	return NULL;
+	int err;
+	pde_t *pde, *pte;
+	struct Page *pp;
+
+	pde = &pgdir[PDX(va)];
+	if (*pde & PTE_P) {
+		pte = (pte_t *) KADDR(PTE_ADDR(*pde));
+		return ((pte_t *) pte + PTX(va));
+	}
+
+	if (!create)
+		return NULL;
+
+	err = page_alloc(&pp);
+	if (err)
+		return NULL;
+
+	pp->pp_ref++;
+	pte = page2kva(pp);
+	memset(pte, 0, PGSIZE);
+	*pde = PTE_ADDR(PADDR(pte))|PTE_W|PTE_P;
+
+	return ((pte_t *) pte + PTX(va));
 }
 
 //
