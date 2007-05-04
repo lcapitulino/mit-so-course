@@ -15,3 +15,7 @@ o The UPAGES mapping has the following permissions:
 
   Then users won't have permissions to read the page. Is this right?
   Should this be changed?
+
+o Some monitor's commands scan the whole free list to do their job, but
+  I think that there're smarter ways to do it (ie, no need to scan the
+  whole list)
