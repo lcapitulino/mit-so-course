@@ -40,6 +40,9 @@
 // offset in page
 #define PGOFF(la)	(((uintptr_t) (la)) & 0xFFF)
 
+// offset in page when PSE is enabled
+#define PS_PGOFF(la)	(((uintptr_t) (la)) & 0x3FFFFF)
+
 // construct linear address from indexes and offset
 #define PGADDR(d, t, o)	((void*) ((d) << PDXSHIFT | (t) << PTXSHIFT | (o)))
 

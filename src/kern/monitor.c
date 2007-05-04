@@ -103,9 +103,11 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 static void
 dump_pde_flags(pde_t *pde)
 {
-	cprintf(" pde:");
+	cprintf(" pde: 0x%08x [", *pde);
 	if (*pde & PTE_PS)
-		cprintf(" PS");
+		cprintf(" 0x%08x PS", PTE_PS_ADDR(*pde));
+	else
+		cprintf(" 0x%08x", PTE_ADDR(*pde));
 	if (*pde & PTE_A)
 		cprintf(" A");
 	if (*pde & PTE_PCD)
@@ -122,13 +124,13 @@ dump_pde_flags(pde_t *pde)
 		cprintf(" R");
 	if (*pde & PTE_P)
 		cprintf(" P");
-	cputchar('\n');
+	cprintf(" ]\n");
 }
 
 static void
 dump_pte_flags(pte_t *pte)
 {
-	cprintf(" pte:");
+	cprintf(" pte: 0x%08x [ 0x%08x", *pte, PTE_ADDR(*pte));
 	if (*pte & PTE_G)
 		cprintf(" G");
 	if (*pte & PTE_PAT)
@@ -151,7 +153,7 @@ dump_pte_flags(pte_t *pte)
 		cprintf(" R");
 	if (*pte & PTE_P)
 		cprintf(" P");
-	cputchar('\n');
+	cprintf(" ]\n");
 }
 
 int
@@ -180,9 +182,9 @@ mon_showmap(int argc, char **argv, struct Trapframe *tf)
 				cprintf("\n0x%08x not mapped\n", va);
 				continue;
 			}
-			ph = PTE_ADDR(*pte);
+			ph = PTE_ADDR(*pte) + PGOFF(va);
 		} else {
-			ph = PTE_PS_ADDR(*pde);
+			ph = PTE_PS_ADDR(*pde) + PS_PGOFF(va);
 		}
 
 		cprintf("\n0x%08x -> 0x%08x\n", va, ph);
