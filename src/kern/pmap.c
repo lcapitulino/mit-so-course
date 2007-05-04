@@ -550,8 +550,17 @@ page_initpp(struct Page *pp)
 int
 page_alloc(struct Page **pp_store)
 {
-	// Fill this function in
-	return -E_NO_MEM;
+	struct Page *pp;
+
+	if (LIST_EMPTY(&page_free_list))
+		return -E_NO_MEM;
+
+	pp = LIST_FIRST(&page_free_list);
+	LIST_REMOVE(pp, pp_link);
+	page_initpp(pp);
+
+	*pp_store = pp;
+	return 0;
 }
 
 //
