@@ -24,6 +24,7 @@ struct Command {
 };
 
 static struct Command commands[] = {
+	{ "alloc_page", "Allocate a physical page", mon_alloc_page },
 	{ "backtrace", "Show backtrace", mon_backtrace },
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
@@ -37,6 +38,23 @@ static struct Command commands[] = {
 unsigned read_eip();
 
 /***** Implementations of basic kernel monitor commands *****/
+
+int
+mon_alloc_page(int argc, char **argv, struct Trapframe *tf)
+{
+	int err;
+	struct Page *pp;
+
+	err = page_alloc(&pp);
+	if (err) {
+		cprintf("Page allocation failed\n");
+		return 0;
+	}
+
+	cprintf("phys: 0x%08x virt: 0x%08x\n", page2pa(pp),
+		(uintptr_t) page2kva(pp));
+	return 0;
+}
 
 int
 mon_help(int argc, char **argv, struct Trapframe *tf)
