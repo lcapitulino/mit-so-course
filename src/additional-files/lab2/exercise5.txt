@@ -6,3 +6,15 @@ page_init(), page_alloc(), page_free(), pgdir_walk(), page_insert(),
 page_remove()
 
 Finished implementation at commit: 43d859f92b33cf4cedf59fd041407a3d376efb9c
+
+Q1: What is the maximum amount of physical memory that this operating
+system can support? Why?
+
+ This operating system can support up to 256MB of memory. The reason for
+this limitation is that we have mapped the kernel between the range
+0xF0000000 and 0xFFFFFFFF (which is 256MB long) so, there's no way to
+reference addresses greater than 4GB w/o using special hardware
+capabilities.
+
+ To use more than 256MB, we should map the kernel below the current base
+address of 0xF0000000.
