@@ -16,6 +16,7 @@ int mon_help(int argc, char **argv, struct Trapframe *tf);
 int mon_kerninfo(int argc, char **argv, struct Trapframe *tf);
 int mon_halt(int argc, char **argv, struct Trapframe *tf);
 int mon_backtrace(int argc, char **argv, struct Trapframe *tf);
+int mon_pse(int argc, char **argv, struct Trapframe *tf);
 int mon_showmap(int argc, char **argv, struct Trapframe *tf);
 int mon_symtab(int argc, char **argv, struct Trapframe *tf);
 

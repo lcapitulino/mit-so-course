@@ -35,6 +35,7 @@
 })
 
 
+extern int pse_support;
 
 extern char bootstacktop[], bootstack[];
 

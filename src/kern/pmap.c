@@ -54,7 +54,7 @@ struct Pseudodesc gdt_pd = {
 	sizeof(gdt) - 1, (unsigned long) gdt
 };
 
-static int pse_support;
+int pse_support;
 
 static void
 enable_pse(void)

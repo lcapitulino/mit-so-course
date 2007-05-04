@@ -28,6 +28,7 @@ static struct Command commands[] = {
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "pse", "Display PSE information", mon_pse },
 	{ "showmap", "Display virtual to physical mapping", mon_showmap },
 	{ "symtab", "Display symbol table", mon_symtab },
 };
@@ -154,6 +155,18 @@ dump_pte_flags(pte_t *pte)
 	if (*pte & PTE_P)
 		cprintf(" P");
 	cprintf(" ]\n");
+}
+
+int
+mon_pse(int argc, char **argv, struct Trapframe *tf)
+{
+	cprintf("PSE support: ");
+	if (pse_support)
+		cprintf("enabled\n");
+	else
+		cprintf("not enabled\n");
+
+	return 0;
 }
 
 int
