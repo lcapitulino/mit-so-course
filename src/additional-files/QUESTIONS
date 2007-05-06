@@ -6,9 +6,6 @@ o The boot loader reads the kernel's elf header at physical address 0x10000,
   page (4096 bytes) but the elf header is only 52 bytes long. Why do we
   read so much?
 
-o PSE was implemented and is working, but all the page handling functions
-  ignores it and assumes 4KB pages. Is it a problem?
-
 o The UPAGES mapping has the following permissions:
 
 	pde: 0x00130003 [ 0x00130000 S W P ]
@@ -20,6 +17,9 @@ o The UPAGES mapping has the following permissions:
 
   Then users won't have permissions to read the page. Is this right?
   Should this be changed?
+
+o PSE was implemented and is working, but all the page handling functions
+  ignores it and assumes 4KB pages. Is it a problem?
 
 o Some monitor's commands scan the whole free list to do their job, but
   I think that there're smarter ways to do it (ie, no need to scan the
