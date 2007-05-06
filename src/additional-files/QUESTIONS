@@ -1,6 +1,11 @@
 Many doubts... OMG
 ==================
 
+o The boot loader reads the kernel's elf header at physical address 0x10000,
+  was this address choosen at random? Also, the boot loader read an entire
+  page (4096 bytes) but the elf header is only 52 bytes long. Why do we
+  read so much?
+
 o PSE was implemented and is working, but all the page handling functions
   ignores it and assumes 4KB pages. Is it a problem?
 
