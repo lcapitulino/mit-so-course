@@ -258,6 +258,10 @@ i386_vm_init(void)
 
 	cpu_check_pse();
 
+	// FIXME: Disable PSE support
+	// Page handling functions are not PSE aware
+	pse_support = 0;
+
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	pgdir = boot_alloc(PGSIZE, PGSIZE);
