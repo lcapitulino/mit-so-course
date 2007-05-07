@@ -247,6 +247,7 @@ int
 mon_showmap(int argc, char **argv, struct Trapframe *tf)
 {
 	int i;
+	pde_t *pgdir = KADDR(rcr3());
 
 	for (i = 1; i < argc; i++) {
 		pde_t *pde, *pte;
@@ -254,7 +255,7 @@ mon_showmap(int argc, char **argv, struct Trapframe *tf)
 
 		va = strtol(argv[i], NULL, 16);
 
-		pde = boot_pgdir + PDX(va);
+		pde = pgdir + PDX(va);
 		if (!(*pde & PTE_P)) {
 			cprintf("\n0x%08x not mapped\n", va);
 			continue;
