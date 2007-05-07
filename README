@@ -2,9 +2,9 @@ This' my own work on the MIT SO course available at:
 
 http://ocw.mit.edu/OcwWeb/Electrical-Engineering-and-Computer-Science/6-828Fall-2006/CourseHome/index.htm
 
-My solutions to the exercises can be found in labs/additional-files/ directory,
-but I suggest you to only look at there (or at the commits history) after you
-have tried to do the exercises by your own.
+My solutions to the exercises can be found in src/labs/additional-files/
+directory, and in the source-code itself.  But I suggest you to only look
+at there after you have tried to do the exercises by yourself.
 
 Luiz Fernando N. Capitulino
 <lcapitulino@gmail.com>
