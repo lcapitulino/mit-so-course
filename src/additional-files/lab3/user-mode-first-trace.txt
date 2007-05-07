@@ -1,0 +1,2 @@
+(0) [0x01ff9b98] 001b:00800b98 (unk. ctxt): mov esi, edi              ; 89fe
+(0) [0x01ff9b9a] 001b:00800b9a (unk. ctxt): int 0x30                  ; cd30
