@@ -6,21 +6,14 @@ o The boot loader reads the kernel's elf header at physical address 0x10000,
   page (4096 bytes) but the elf header is only 52 bytes long. Why do we
   read so much?
 
-o The UPAGES mapping has the following permissions:
-
-	pde: 0x00130003 [ 0x00130000 S W P ]
-	pte: 0x00118005 [ 0x00118000 U R P ]
-
-  According to Intel manuals, the final permission will be:
-
-	Supervisor Read-Write
-
-  Then users won't have permissions to read the page. Is this right?
-  Should this be changed?
-
 o PSE was implemented and is working, but all the page handling functions
   ignores it and assumes 4KB pages. Is it a problem?
 
 o Some monitor's commands scan the whole free list to do their job, but
   I think that there're smarter ways to do it (ie, no need to scan the
   whole list)
+
+o Is my memory aligment code correct? Better to review them (boot_alloc(),
+  segment_alloc())
+
+o Looks like load_icode() can leak kernel memory, take a look at there
