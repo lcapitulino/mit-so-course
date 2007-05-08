@@ -621,6 +621,12 @@ page_decref(struct Page* pp)
 		page_free(pp);
 }
 
+void
+page_incref(struct Page* pp)
+{
+	pp->pp_ref++;
+}
+
 // Given 'pgdir', a pointer to a page directory, pgdir_walk returns
 // a pointer to the page table entry (PTE) for linear address 'va'.
 // This requires walking the two-level page table structure.
