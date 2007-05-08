@@ -27,6 +27,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "alloc_page", "Allocate a physical page", mon_alloc_page },
 	{ "backtrace", "Show backtrace", mon_backtrace },
+	{ "dump_eflags", "Show EFLAGS register info", mon_dump_eflags },
 	{ "free", "Show available memory info", mon_free },
 	{ "free_page", "Free an allocated page", mon_free_page },
 	{ "halt", "Halt the processor", mon_halt },
@@ -120,6 +121,50 @@ mon_halt(int argc, char **argv, struct Trapframe *tf)
 {
 	cprintf("Halting the processor\n");
 	asm("hlt");
+	return 0;
+}
+
+int
+mon_dump_eflags(int argc, char **argv, struct Trapframe *tf)
+{
+	uint32_t eflags;
+
+	eflags = read_eflags();
+	if (eflags & FL_CF)
+		cprintf("CF ");
+	if (eflags & FL_PF)
+		cprintf("PF ");
+	if (eflags & FL_AF)
+		cprintf("AF ");
+	if (eflags & FL_ZF)
+		cprintf("ZF ");
+	if (eflags & FL_SF)
+		cprintf("SF ");
+	if (eflags & FL_TF)
+		cprintf("TF ");
+	if (eflags & FL_IF)
+		cprintf("IF ");
+	if (eflags & FL_DF)
+		cprintf("DF ");
+	if (eflags & FL_OF)
+		cprintf("OF ");
+	cprintf("IOPL: %d ", eflags & FL_IOPL_MASK);
+	if (eflags & FL_NT)
+		cprintf("NT ");
+	if (eflags & FL_RF)
+		cprintf("RF ");
+	if (eflags & FL_VM)
+		cprintf("VM ");
+	if (eflags & FL_AC)
+		cprintf("AC ");
+	if (eflags & FL_VIF)
+		cprintf("VIF ");
+	if (eflags & FL_VIP)
+		cprintf("VIP ");
+	if (eflags & FL_ID)
+		cprintf("ID");
+
+	cputchar('\n');
 	return 0;
 }
 
