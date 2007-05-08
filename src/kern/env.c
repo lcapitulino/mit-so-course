@@ -462,8 +462,12 @@ env_run(struct Env *e)
 	//	and make sure you have set the relevant parts of
 	//	e->env_tf to sensible values.
 	
-	// LAB 3: Your code here.
-
-        panic("env_run not yet implemented");
+	if (!curenv) {
+		curenv = e;
+		e->env_runs++;
+		lcr3(e->env_cr3);
+		env_pop_tf(&e->env_tf);
+	}
+	panic("user to user context not implemented\n");
 }
 
