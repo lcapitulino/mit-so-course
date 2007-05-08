@@ -205,12 +205,27 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 static void
 segment_alloc(struct Env *e, void *va, size_t len)
 {
+	int i, err;
+	struct Page *p;
+
 	// LAB 3: Your code here.
 	// (But only if you need it for load_icode.)
 	//
 	// Hint: It is easier to use segment_alloc if the caller can pass
 	//   'va' and 'len' values that are not page-aligned.
 	//   You should round va down, and round len up.
+	va = ROUNDDOWN(va, PGSIZE);
+	len = ROUNDUP(len, PGSIZE);
+
+	for (i = 0; i < len; i += PGSIZE) {
+		err = page_alloc(&p);
+		if (err)
+			panic("page_alloc: %e\n", err);
+
+		err = page_insert(e->env_pgdir, p, va + i, PTE_U|PTE_W);
+		if (err)
+			panic("page_insert: %e\n", err);
+	}
 }
 
 //
