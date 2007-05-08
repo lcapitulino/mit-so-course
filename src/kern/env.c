@@ -347,7 +347,17 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 void
 env_create(uint8_t *binary, size_t size)
 {
-	// LAB 3: Your code here.
+	int err;
+	struct Env *env;
+
+	err = env_alloc(&env, 0);
+	if (err)
+		panic("env_alloc() failed: %e\n", err);
+
+	if (env != &envs[0])
+		panic("env[0] not allocated\n");
+
+	load_icode(env, binary, size);
 }
 
 //
