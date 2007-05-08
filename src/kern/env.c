@@ -118,7 +118,15 @@ env_setup_vm(struct Env *e)
 	//	mapped above UTOP -- but you do need to increment
 	//	env_pgdir's pp_ref!
 
-	// LAB 3: Your code here.
+	page_incref(p);
+
+	e->env_pgdir = (pde_t *) page2kva(p);
+	e->env_cr3 = page2pa(p);
+
+	memset(e->env_pgdir, 0, PDX(UTOP)-1);
+
+	for (i = PDX(UTOP); i < NPDENTRIES; i++)
+		e->env_pgdir[i] = boot_pgdir[i];
 
 	// VPT and UVPT map the env's own page table, with
 	// different permissions.
