@@ -253,6 +253,11 @@ segment_alloc(struct Env *e, void *va, size_t len)
 static void
 load_icode(struct Env *e, uint8_t *binary, size_t size)
 {
+	int err;
+	struct Page *p;
+	struct Elf *hdr;
+	struct Proghdr *ph, *eph;
+
 	// Hints: 
 	//  Load each program segment into virtual memory
 	//  at the address specified in the ELF section header.
@@ -282,12 +287,51 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	//  to make sure that the environment starts executing there.
 	//  What?  (See env_run() and env_pop_tf() below.)
 
-	// LAB 3: Your code here.
+	hdr = (struct Elf *) binary;
+
+	if (hdr->e_type != 0x2)
+		panic("load_icode: not an executable file\n");
+
+	if (hdr->e_machine != 0x3)
+		panic("load_icode: not i386 executable file\n");
+
+	if (!hdr->e_phoff || !hdr->e_phnum)
+		panic("load_icode: program header table not present\n");
+
+	lcr3(e->env_cr3);
+
+	ph = (struct Proghdr *) ((uint8_t *) binary + hdr->e_phoff);
+	eph = ph + hdr->e_phnum;
+	for (; ph < eph; ph++) {
+		if (ph->p_type == ELF_PROG_LOAD) {
+			if (ph->p_filesz > ph->p_memsz) {
+				panic("load_icode: file size larger than"
+				      " memory size");
+			}
+
+			// XXX: Are we leaking kernel memory here?
+			// segment_alloc() can round down memory addresses,
+			// and we won't use it...
+
+			segment_alloc(e, (void *) ph->p_va, ph->p_memsz);
+			memcpy((void *) ph->p_va, binary + ph->p_offset,
+			       ph->p_filesz);
+			memset((void *) ph->p_va + ph->p_filesz, 0,
+			       ph->p_memsz - ph->p_filesz);
+		}
+	}
+
+	lcr3(boot_cr3);
 
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE.
 
-	// LAB 3: Your code here.
+	err = page_alloc(&p);
+	if (err)
+		panic("page_alloc: e%\n", err);
+	page_insert(e->env_pgdir, p, (void *) USTACKTOP - PGSIZE, PTE_U|PTE_W);
+
+	e->env_tf.tf_eip = hdr->e_entry;
 }
 
 //
