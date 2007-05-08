@@ -199,7 +199,7 @@ boot_pgdir_walk(pde_t *pgdir, uintptr_t la, int create)
 
 	pte = (pte_t *) boot_alloc(PGSIZE, PGSIZE);
 	memset(pte, 0, PGSIZE);
-	*pde = PTE_ADDR(PADDR(pte))|PTE_W|PTE_P;
+	*pde = PTE_ADDR(PADDR(pte))|create;
 
 	return ((pte_t *) pte + PTX(la));
 }
@@ -217,9 +217,11 @@ boot_map_segment(pde_t *pgdir, uintptr_t la, size_t size, physaddr_t pa, int per
 {
 	size_t i;
 
+	perm |= PTE_P;
+
 	for (i = 0; i < size; i += PGSIZE) {
-		pte_t *pte = boot_pgdir_walk(pgdir, la + i, 1);
-		*pte = PTE_ADDR(pa + i)|perm|PTE_P;
+		pte_t *pte = boot_pgdir_walk(pgdir, la + i, perm);
+		*pte = PTE_ADDR(pa + i)|perm;
 	}
 }
 
@@ -657,7 +659,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	pp->pp_ref++;
 	pte = page2kva(pp);
 	memset(pte, 0, PGSIZE);
-	*pde = PTE_ADDR(PADDR(pte))|PTE_W|PTE_P;
+	*pde = PTE_ADDR(PADDR(pte))|create;
 
 	return ((pte_t *) pte + PTX(va));
 }
@@ -688,6 +690,7 @@ page_insert(pde_t *pgdir, struct Page *pp, void *va, int perm)
 	int inval = 0;
 
 	pp->pp_ref++;
+	perm |= PTE_P;
 
 	pte = pgdir_walk(pgdir, va, 0);
 	if (pte) {
@@ -697,14 +700,14 @@ page_insert(pde_t *pgdir, struct Page *pp, void *va, int perm)
 			inval = 1;
 		}
 	} else {
-		pte = pgdir_walk(pgdir, va, 1);
+		pte = pgdir_walk(pgdir, va, perm);
 		if (!pte) {
 			pp->pp_ref--;
 			return -E_NO_MEM;
 		}
 	}
 
-	*pte = PTE_ADDR(page2pa(pp))|perm|PTE_P;
+	*pte = PTE_ADDR(page2pa(pp))|perm;
 
 	if (inval)
 		tlb_invalidate(pgdir, va);
