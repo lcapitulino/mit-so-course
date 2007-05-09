@@ -1,7 +1,7 @@
 	JOS: Explicação detalhada do boot até o carregamento do kernel
 
 			Luiz Fernando N. Capitulino
-			   lcapitulino@gmail.com
+			  <lcapitulino@gmail.com>
 
 1. Introdução
 -------------
@@ -12,8 +12,8 @@ emulador bochs e no kernel do curso de sistemas operacionais do MIT (JOS).
 2. Modos de operação
 --------------------
 
- Existem dois modos de acesso a memória que um processador x86 suporta.
-Modo real e modo protegido. Ambos são apresentados a seguir.
+ O processador x86 de 32-bits implementa dois modos de operação, conhecidos
+como modo real e modo protegido. Ambos são apresentados a seguir.
 
 2.1 Modo real
 -------------
@@ -26,10 +26,10 @@ primeiro processador da família x86.
 
  o Barramento de dados e registradores de propósito geral de 16-bits
    (ie, processador de 16-bits)
- o Barramento de endereçamento de 20-bits, então endereça até 1MB de RAM
-   (0x00000 - 0xFFFFF)
+ o Barramento de endereçamento de 20-bits (endereça até 1MB de RAM)
  o Limite de 640KB de RAM. O intervalo de 640KB-1MB é mapeado para outros
    usos (display VGA, ROMs de expansão e BIOS)
+ o Memória dividida em segmentos
  o Não há restrições ao acesso a memória, isto é, o processador não
    implementa nenhum tipo de proteção
  o As funções da BIOS podem ser acessadas diretamente
@@ -38,44 +38,33 @@ primeiro processador da família x86.
 restrição para acessá-la. De fato, segmentação foi adicionada para ser
 possível endereçar mais de 64KB com registradores de 16-bits.
 
- Isso significa que os programas armazenados na memória tem liberdade
-para escrever/ler qualquer região da memória, inclusive segmentos de outros
-programas.
-
- Mais informações em:
-	http://en.wikipedia.org/wiki/8086
-
 2.2 Modo protegido
 ------------------
 
  O modo protegido foi introduzido no processador 80286 e estendido no
 processador 80386.
 
- As principais características do modo protegido (considerando a
-arquitetura do processador 80386) são:
+ As principais características do modo protegido são:
 
- o Proteção ao acesso a memória: níveis de privilégio e descritores de
-   segmento para implementar regras de acesso a segmentos de memória
+ o Proteção de acesso a segmentos de memória
  o Paginação: memória virtual, também implementa bits de proteção
- o Suporte para troca de contexto
  o Proteção para operações de I/O
+ o Suporte para troca de contexto
  o Processador de 32-bits, pode endereçar até 4GB de RAM
 
  Como visto anteriormente, o processador inicia em modo real. A mudança
-de modo real para modo protegido é feita por software.
-
- Mais informações e explicações detalhadas sobre o modo protegido podem
-ser encontradas nos manuais da Intel, um breve resumo pode ser encontrado
-em:
-	http://en.wikipedia.org/wiki/Protected_mode
+de modo real para modo protegido é feita por software (normalmente o
+sistema operacional).
 
 3. BIOS
 -------
 
- Logo quando é ligado, o processador (simulado pelo bochs) carrega o
-registrador CS (Code Segment) com o valor 0xF000 e o IP (Instruction Pointer)
-com 0xFFF0. Isso significa que o processador começa executando o código
-contido no endereço físico 0x000FFFF0 (modo real).
+ Quando o hardware é ligado ou reiniciado, o processador carrega cada um
+de seus registradores com valores padrões.
+
+ O registrador CS (Code Segment) é carregado com o valor 0xF000 e o IP
+(Instruction Pointer) com 0xFFF0. Isso significa que o processador começa
+executando o código contido no endereço físico 0x000FFFF0 (modo real).
 
  Esse endereço está dentro da área de memória da BIOS, que vai de 0x000F0000
 até 0x00100000 (o hardware do PC mapeia esse intervalo para a memória flash
@@ -180,3 +169,15 @@ i386_init() no endereço físico correto.
  i386_init() é o ponto de entrada do código em C, ela vai inicializar o BSS
 do kernel com zeros, inicializar a console e chamar monitor(), a qual vai
 esperar por uma entrada do usuário e executar a função desejada.
+
+6. Referências
+--------------
+
+o Modo real
+	http://en.wikipedia.org/wiki/8086
+
+o Modo protegido
+	http://en.wikipedia.org/wiki/Protected_mode
+
+o Intel 64 and IA-32 Architectures Software Developer's Manual,
+  System Programming Guide, Part 1
