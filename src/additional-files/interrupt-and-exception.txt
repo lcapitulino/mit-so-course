@@ -1,0 +1,51 @@
+Interrupt and Exception handling
+--------------------------------
+
+1. Overview
+-----------
+
+o Interrupts and exceptions are events that indicate that a condition
+  exists somewhere in the system, the processor, or within the currently
+  executing program or task that requires the attention of a processor
+
+o The identification number of each defined exception and interrupt
+  is called a vector
+
+o The allowable range for vector numbers is 0 to 255. Vectors in the
+  range 0 through 31 are reserved by the Intel 64 and IA-32 architectures
+  for architecture-defined exceptions and interrupts.  Not all of the
+  vectors in this range have a currently defined function. The unassigned
+  vectors in this range are reserved. Do not use the reserved vectors
+
+o Vectors in the range 32 to 255 are designated as user-defined interrupts
+  and are not reserved
+
+o The INT n instruction permits interrupts to be generated from within
+  software by supplying an interrupt vector number as an operand
+
+2. Exception classifications
+----------------------------
+
+o Faults -- A fault is an exception that can generally be corrected and
+  that, once corrected, allows the program to be restarted with no loss
+  of continuity
+
+o Traps -- A trap is an exception that is reported immediately following
+  the execution of the trapping instruction
+
+o Aborts -- An abort is an exception that does not always report the precise
+  location of the instruction causing the exception and does not allow a
+  restart of the program or task that caused the exception
+
+3. Interrupt descriptor table (IDT)
+-----------------------------------
+
+o Associates each exception or interrupt vector with a gate descriptor for
+  the procedure or task used to service the associated exception or
+  interrupt
+
+o Like the GDT and LDTs, the IDT is an array of 8-byte descriptors (in
+  protected mode)
+
+o To form an index into the IDT, the processor scales the exception or
+  interrupt vector by eight (the number of bytes in a gate descriptor)
