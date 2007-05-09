@@ -1,8 +1,12 @@
 
+o Why do we disable interrupts twice in boot.S?
+
+o Why is it necessary to load DS, ES and SS segments with zero at the
+  beginning of boot.S? Intel manual says that this registers will be zero
+  at initialization time
+
 o The boot loader reads the kernel's elf header at physical address 0x10000,
-  was this address choosen at random? Also, the boot loader read an entire
-  page (4096 bytes) but the elf header is only 52 bytes long. Why do we
-  read so much?
+  was this address choosen at random? Why not 0x1000 (the second page)?
 
 o Is my memory aligment code correct? Better to review them (boot_alloc(),
   segment_alloc())
