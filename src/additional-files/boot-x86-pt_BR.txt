@@ -93,7 +93,12 @@ pelo usuário) e carrega seu primeiro setor (512 bytes) no intervalo de
 endereço físico 0x00007C00-0x00007DFF e, usando a instrução jmp, pula para
 esse endereço, transferindo o controle para o boot loader.
 
-FIXME: Falar sobre boot em CD-ROM.
+FIXME 1: Falar sobre boot em CD-ROM.
+
+FIXME 2: O manual da Intel diz que o processador busca a primeira instrução
+no endereço físico 0xFFFFFFF0H, e depois que o registrador CS é carregado
+novamente o processador começa a fazer a tradução de endereços de modo-real.
+Essa fato torna inválido a primeira parte dessa explicação.
 
 4. Boot Loader
 --------------
