@@ -7,11 +7,10 @@ o The boot loader reads the kernel's elf header at physical address 0x10000,
   read so much?
 
 o PSE was implemented and is working, but all the page handling functions
-  ignores it and assumes 4KB pages. Is it a problem?
+  ignores it and assumes 4KB pages.
 
-o Some monitor's commands scan the whole free list to do their job, but
-  I think that there're smarter ways to do it (ie, no need to scan the
-  whole list)
+o Some monitor's commands scan the whole free list to do their job, it's
+  possible to do better
 
 o Is my memory aligment code correct? Better to review them (boot_alloc(),
   segment_alloc())
