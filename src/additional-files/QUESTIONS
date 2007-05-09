@@ -1,4 +1,8 @@
 
+o Intel's manual says that the first instruction is fetched from physical
+  address 0xFFFFFFF0H. This goes against on what was explained in lab1's
+  pdf
+
 o Why do we disable interrupts twice in boot.S?
 
 o Why is it necessary to load DS, ES and SS segments with zero at the
