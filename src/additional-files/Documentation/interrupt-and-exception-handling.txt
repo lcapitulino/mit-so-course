@@ -1,27 +1,24 @@
 Interrupt and Exception handling
 --------------------------------
 
-1. Overview
------------
+1. Introduction
+---------------
 
-o Interrupts and exceptions are events that indicate that a condition
-  exists somewhere in the system, the processor, or within the currently
-  executing program or task that requires the attention of a processor
+o Interrupts and exceptions are special kinds of control transfer; they work
+  somewhat like unprogrammed CALLs
+
+o The difference between interrupts and exceptions is that interrupts are
+  used to handle asynchronous events external to the processor, but exceptions
+  handle conditions detected by the processor itself in the course of
+  executing instructions
 
 o The identification number of each defined exception and interrupt
   is called a vector
 
 o The allowable range for vector numbers is 0 to 255. Vectors in the
-  range 0 through 31 are reserved by the Intel 64 and IA-32 architectures
-  for architecture-defined exceptions and interrupts.  Not all of the
-  vectors in this range have a currently defined function. The unassigned
-  vectors in this range are reserved. Do not use the reserved vectors
-
-o Vectors in the range 32 to 255 are designated as user-defined interrupts
-  and are not reserved
-
-o The INT n instruction permits interrupts to be generated from within
-  software by supplying an interrupt vector number as an operand
+  range 0 through 31 are reserved and should not be used. Vectors in the
+  range 32 to 255 are designated as user-defined interrupts and are not
+  reserved
 
 2. Exception classifications
 ----------------------------
