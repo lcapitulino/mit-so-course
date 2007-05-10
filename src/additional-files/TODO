@@ -10,3 +10,5 @@ o Some monitor's commands scan the whole free list to do their job, it's
 
 o I need to understand better how protection works at the segment level
   (eg, RPL vs. CPL)
+
+o Read about how the assembly code access and pass C structs to functions
