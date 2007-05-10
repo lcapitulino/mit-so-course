@@ -41,9 +41,43 @@
  * Lab 3: Your code here for generating entry points for the different traps.
  */
 
-	
+TRAPHANDLER_NOEC(trap_ex_divide, T_DIVIDE)
+TRAPHANDLER_NOEC(trap_ex_debug, T_DEBUG)
+TRAPHANDLER_NOEC(trap_ex_nmi, T_NMI)
+TRAPHANDLER_NOEC(trap_ex_break_point, T_BRKPT)
+TRAPHANDLER_NOEC(trap_ex_overflow, T_OFLOW)
+TRAPHANDLER_NOEC(trap_ex_bound, T_BOUND)
+TRAPHANDLER_NOEC(trap_ex_iop, T_ILLOP)
+TRAPHANDLER_NOEC(trap_ex_device, T_DEVICE)
+TRAPHANDLER(trap_ex_db_fault, T_DBLFLT)
+TRAPHANDLER(trap_ex_tss, T_TSS)
+TRAPHANDLER(trap_ex_segnp, T_SEGNP)
+TRAPHANDLER(trap_ex_stack, T_STACK)
+TRAPHANDLER(trap_ex_gp_fault, T_GPFLT)
+TRAPHANDLER(trap_ex_pg_fault, T_PGFLT)
+TRAPHANDLER_NOEC(trap_ex_fp_error, T_FPERR)
+TRAPHANDLER(trap_ex_align, T_ALIGN)
+TRAPHANDLER_NOEC(trap_ex_mcheck, T_MCHK)
+TRAPHANDLER_NOEC(trap_ex_simderr, T_SIMDERR)
+
 
 /*
  * Lab 3: Your code here for _alltraps
  */
-	
+
+.globl _alltraps
+_alltraps:
+	pushl %ds
+	pushl %es
+	pushal
+	movl $GD_KD, %eax
+	movw %ax, %ds
+	movw %ax, %es
+	pushl %esp
+	call trap
+	addl $0x4, %esp
+	popal
+	popl %es
+	popl %ds
+	addl $0x8, %esp /* skip tf_trapno and tf_errcode */
+	iret
