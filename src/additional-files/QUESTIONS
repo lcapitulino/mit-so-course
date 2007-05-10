@@ -16,3 +16,6 @@ o Is my memory aligment code correct? Better to review them (boot_alloc(),
   segment_alloc())
 
 o Looks like load_icode() can leak kernel memory, take a look at there
+
+o Does the processor queue interrupts that arraive when interrupts are
+  disabled?
