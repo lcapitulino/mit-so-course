@@ -7,3 +7,6 @@ o PSE was implemented and is working, but all the page handling functions
 
 o Some monitor's commands scan the whole free list to do their job, it's
   possible to do better
+
+o I need to understand better how protection works at the segment level
+  (eg, RPL vs. CPL)
