@@ -25,14 +25,20 @@ o The allowable range for vector numbers is 0 to 255. Vectors in the
 
 o Faults -- A fault is an exception that can generally be corrected and
   that, once corrected, allows the program to be restarted with no loss
-  of continuity
+  of continuity. The return address (saved contents of the CS and EIP
+  registers) for the fault handler points to the faulting instruction
 
 o Traps -- A trap is an exception that is reported immediately following
-  the execution of the trapping instruction
+  the execution of the trapping instruction. Traps allow execution of a
+  program or task to be continued without loss of program continuity.
+  The return address for the trap handler points to the instruction to be
+  executed after the trapping instruction
 
 o Aborts -- An abort is an exception that does not always report the precise
   location of the instruction causing the exception and does not allow a
-  restart of the program or task that caused the exception
+  restart of the program or task that caused the exception. Aborts are used
+  to report severe errors, such as hardware errors and inconsistent or illegal
+  values in system tables
 
 3. Interrupt descriptor table (IDT)
 -----------------------------------
