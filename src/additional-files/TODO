@@ -12,3 +12,6 @@ o I need to understand better how protection works at the segment level
   (eg, RPL vs. CPL)
 
 o Read about how the assembly code access and pass C structs to functions
+
+o trapentry.S and trap.c has a lot of duplicated code (see lab3 challenge
+  at page 13)
