@@ -9,14 +9,16 @@ the same handler, what feature that exists in the current implementation
 could not be provided?)
 
  The purpose of having individual handler function for each
-exception/interrupt is to let the operating system choose easily what
-exceptions/interrupts it's going to handle and to have different
-settings for each of them.
+exception/interrupt is to allow the operating system to:
 
- If all exceptions/interrupts were delivered to the same handler, the
-operating system would have to enable the exceptions/interrupts by
-software making it more complex, and there would be only one setting
-possible (eg, software would always invoke or not).
+ o Choose what exceptions/interrupts it want to handle in a clean way
+ o Have different settings for different handlers
+
+  If all exceptions/interrupts were delivered to the same handler, it
+wouldn't be possible to implement system calls by using software interrupts,
+because we'd have to allow the user to invoke any exception/interrupt by
+software. This has security implications.
 
  Also, the operating system would have to provide a very big function
-to handle everything, which is a bad design choice.
+to handle everything, which is a bad design choice that would make
+things very complex.
