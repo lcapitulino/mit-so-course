@@ -62,7 +62,7 @@ idt_init(void)
 	SETGATE(idt[0], 1, GD_KT, trap_ex_divide, 0)
 	SETGATE(idt[1], 1, GD_KT, trap_ex_debug, 0)
 	SETGATE(idt[2], 1, GD_KT, trap_ex_nmi, 0)
-	SETGATE(idt[3], 1, GD_KT, trap_ex_break_point, 0)
+	SETGATE(idt[3], 1, GD_KT, trap_ex_break_point, 3)
 	SETGATE(idt[4], 1, GD_KT, trap_ex_overflow, 0)
 	SETGATE(idt[5], 1, GD_KT, trap_ex_bound, 0)
 	SETGATE(idt[6], 1, GD_KT, trap_ex_iop, 0)
@@ -131,6 +131,9 @@ trap_dispatch(struct Trapframe *tf)
 	switch (tf->tf_trapno) {
 	case T_PGFLT:
 		page_fault_handler(tf);
+		return;
+	case T_BRKPT:
+		break_point_handler(tf);
 		return;
 	}
 
@@ -218,3 +221,8 @@ page_fault_handler(struct Trapframe *tf)
 	env_destroy(curenv);
 }
 
+void
+break_point_handler(struct Trapframe *tf)
+{
+	monitor(tf);
+}
