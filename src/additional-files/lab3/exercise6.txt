@@ -1,0 +1,25 @@
+Exercise 6
+----------
+
+Commit 520fc0a1b08cd7d16dbdbfda8542818fddee3b28
+
+Q1: The break point test case will either generate a break point
+exception or a general protect fault depending on how you initialized
+the break point entry in the IDT (i.e., your call to SETGATE from
+idt_init). Why? How did you need to set it in order to get the breakpoint
+exception to work as specified above?
+
+ To get the breakpoint exception to work as specified above, it's needed
+to set the DPL trap's field to 3.
+
+ Otherwise, if it's set to 0, user-mode won't have the appropriate
+permission to transfer control to the break point handler. As this is
+defined as a protection violation fault the processor will generate a general
+protect fault.
+
+Q2: What do you think is the point of these mechanisms, particularly in
+light of what the user/softint test program does?
+
+ The point of these mechanisms is to allow user-mode to tranfers control
+to the kernel under certain circumstances. It makes possible to implement
+some features, like single-step debugging and system calls.
