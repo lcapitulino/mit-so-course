@@ -22,3 +22,18 @@ software. This has security implications.
  Also, the operating system would have to provide a very big function
 to handle everything, which is a bad design choice that would make
 things very complex.
+
+Q2: Did you have to do anything to make the user/softint program behave
+correctly (i.e., as the grade script expects)? Why is this the correct
+behavior? What happens if the kernel actually allows softint's int $14
+instruction to invoke the kernel's page fault handler (which is interrupt
+number 14)?
+
+ I didn't have to do anything, because I do not allow user-mode to invoke
+the page fault handler.
+
+ This is the correct behavior because the page fault handler does its job
+by checking the error code (which has a special format) and, when invoked
+from user-mode, the error code has bogus information that can drive the
+page fault handler to perform the wrong operation, leading to system
+crash.
