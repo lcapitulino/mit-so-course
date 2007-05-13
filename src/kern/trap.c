@@ -136,7 +136,7 @@ trap_dispatch(struct Trapframe *tf)
 		monitor_ss(tf);
 		return;
 	case T_BRKPT:
-		break_point_handler(tf);
+		monitor(tf);
 		return;
 	}
 
@@ -242,10 +242,4 @@ page_fault_handler(struct Trapframe *tf)
 		curenv->env_id, fault_va, tf->tf_eip);
 	print_trapframe(tf);
 	env_destroy(curenv);
-}
-
-void
-break_point_handler(struct Trapframe *tf)
-{
-	monitor(tf);
 }
