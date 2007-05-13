@@ -2,9 +2,22 @@ This' my own work on the MIT SO course available at:
 
 http://ocw.mit.edu/OcwWeb/Electrical-Engineering-and-Computer-Science/6-828Fall-2006/CourseHome/index.htm
 
-My solutions to the exercises can be found in src/labs/additional-files/
-directory, and in the source-code itself.  But I suggest you to only look
-at there after you have tried to do the exercises by yourself.
+ In src/additional-files/ directory you'll find my answers, solutions and
+other texts.
+
+ To try JOS you should:
+
+1. Enter the src directory
+
+	$ cd src
+
+2. Compile
+
+	$ make
+
+3. Run it on bochs
+
+	$ bochs -f additional-files/bochsrc
 
 Luiz Fernando N. Capitulino
 <lcapitulino@gmail.com>
