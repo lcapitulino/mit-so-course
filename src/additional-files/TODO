@@ -15,3 +15,8 @@ o Read about how the assembly code access and pass C structs to functions
 
 o trapentry.S and trap.c has a lot of duplicated code (see lab3 challenge
   at page 13)
+
+o Extend monitor's kdb to do the following:
+	- Disassemble support (see lab3 exercise 6's challenge)
+	- Print function name, file name and file number
+	- Backtrace support

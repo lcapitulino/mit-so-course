@@ -132,6 +132,9 @@ trap_dispatch(struct Trapframe *tf)
 	case T_PGFLT:
 		page_fault_handler(tf);
 		return;
+	case T_DEBUG:
+		monitor_ss(tf);
+		return;
 	case T_BRKPT:
 		break_point_handler(tf);
 		return;
@@ -145,6 +148,23 @@ trap_dispatch(struct Trapframe *tf)
 		env_destroy(curenv);
 		return;
 	}
+}
+
+static int
+single_step_enabled(void)
+{
+	int ret = 0;
+	uint32_t dr6;
+	const uint32_t sstep = 0x4000;
+
+	dr6 = rdr6();
+	if (dr6 & sstep) {
+		dr6 &= ~sstep;
+		ldr6(dr6);
+		ret = 1;
+	}
+
+	return ret;
 }
 
 void
@@ -165,6 +185,9 @@ trap(struct Trapframe *tf)
 	
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
+
+	if (single_step_enabled())
+		return;
 
         // Return to the current environment, which should be runnable.
         assert(curenv && curenv->env_status == ENV_RUNNABLE);

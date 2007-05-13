@@ -32,9 +32,11 @@ static struct Command commands[] = {
 	{ "free_page", "Free an allocated page", mon_free_page },
 	{ "halt", "Halt the processor", mon_halt },
 	{ "help", "Display this list of commands", mon_help },
+	{ "kdb", "Kernel debugger ('kdb help' for options)", mon_kdb },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
 	{ "page_status", "Display page status", mon_page_status },
 	{ "pse", "Display PSE information", mon_pse },
+	{ "s", "Single step", mon_single_step },
 	{ "showmap", "Display virtual to physical mapping", mon_showmap },
 	{ "symtab", "Display symbol table", mon_symtab },
 };
@@ -69,6 +71,66 @@ mon_help(int argc, char **argv, struct Trapframe *tf)
 	for (i = 0; i < NCOMMANDS; i++)
 		cprintf("%s - %s\n", commands[i].name, commands[i].desc);
 	return 0;
+}
+
+static void
+kdb_usage(void)
+{
+	cprintf("Valid commands are:\n");
+	cprintf(
+		"   help          this message\n"
+		"   single-step   enable single-step mode\n"
+		"   continue      disable single-step mode\n"
+		);
+}
+
+static void
+kdb_enable_single_step(void)
+{
+	uint32_t eflags;
+
+	eflags = read_eflags();
+	eflags |= FL_TF;
+	write_eflags(eflags);
+}
+
+int
+mon_kdb(int argc, char **argv, struct Trapframe *tf)
+{
+	char *opt;
+
+	if (argc != 2) {
+		cprintf("ERROR: wrong number of parameters\n");
+		kdb_usage();
+		return 0;
+	}
+
+	opt = argv[1];
+
+	if (!strcmp(opt, "help")) {
+		kdb_usage();
+	} else if (!strcmp(opt, "single-step")) {
+		kdb_enable_single_step();
+		// force monitor to exit
+		return -1 ;
+	} else if (!strcmp(opt, "continue")) {
+		tf->tf_eflags &= ~FL_TF;
+		// force monitor to exit
+		return -1;
+	} else {
+		cprintf("ERROR: '%s' not implemented\n", opt);
+		kdb_usage();
+	}
+
+	return 0;
+}
+
+int
+mon_single_step(int argc, char **argv, struct Trapframe *tf)
+{
+	// Single-step
+	// Just for a return from the monitor
+	return -1;
 }
 
 int
@@ -404,6 +466,23 @@ runcmd(char *buf, struct Trapframe *tf)
 	}
 	cprintf("Unknown command '%s'\n", argv[0]);
 	return 0;
+}
+
+// Monitor called from the debug exception handler
+// used to single-step through the kernel
+void
+monitor_ss(struct Trapframe *tf)
+{
+	char *buf;
+
+	cprintf("-> 0x%08x\n", tf->tf_eip);
+
+	while (1) {
+		buf = readline(">>> ");
+		if (buf != NULL)
+			if (runcmd(buf, tf) < 0)
+				return;
+	}
 }
 
 void
