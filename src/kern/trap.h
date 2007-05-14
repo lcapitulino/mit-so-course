@@ -36,5 +36,6 @@ void trap_ex_fp_error(void);
 void trap_ex_align(void);
 void trap_ex_mcheck(void);
 void trap_ex_simderr(void);
+void trap_ex_syscall(void);
 
 #endif /* JOS_KERN_TRAP_H */

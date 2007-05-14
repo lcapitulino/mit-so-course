@@ -59,6 +59,7 @@ TRAPHANDLER_NOEC(trap_ex_fp_error, T_FPERR)
 TRAPHANDLER(trap_ex_align, T_ALIGN)
 TRAPHANDLER_NOEC(trap_ex_mcheck, T_MCHK)
 TRAPHANDLER_NOEC(trap_ex_simderr, T_SIMDERR)
+TRAPHANDLER_NOEC(trap_ex_syscall, T_SYSCALL)
 
 
 /*

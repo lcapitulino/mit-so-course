@@ -77,6 +77,7 @@ idt_init(void)
 	SETGATE(idt[17], 1, GD_KT, trap_ex_align, 0)
 	SETGATE(idt[18], 1, GD_KT, trap_ex_mcheck, 0)
 	SETGATE(idt[19], 1, GD_KT, trap_ex_simderr, 0)
+	SETGATE(idt[48], 1, GD_KT, trap_ex_syscall, 3)
 
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
@@ -131,6 +132,14 @@ trap_dispatch(struct Trapframe *tf)
 	switch (tf->tf_trapno) {
 	case T_PGFLT:
 		page_fault_handler(tf);
+		return;
+	case T_SYSCALL:
+		tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax,
+					  tf->tf_regs.reg_edx,
+					  tf->tf_regs.reg_ecx,
+					  tf->tf_regs.reg_ebx,
+					  tf->tf_regs.reg_edi,
+					  tf->tf_regs.reg_esi);
 		return;
 	case T_DEBUG:
 		monitor_ss(tf);
