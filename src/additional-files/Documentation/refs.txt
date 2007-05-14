@@ -7,6 +7,7 @@ MIT course readings
 
 bochs
 -----
+	http://bochs.sourceforge.net/
 
 Internal debugger
 	 http://bochs.sourceforge.net/doc/docbook/user/internal-debugger.html
@@ -15,8 +16,8 @@ i386
 ----
 
 Old Intel Manual (it's interesting because it's short)
-    html: http://www.logix.cz/michal/doc/i386/
-    pdf:  http://www.cs.ucla.edu/~kohler/class/04f-aos/ref/i386.pdf
+	html: http://www.logix.cz/michal/doc/i386/
+	pdf:  http://www.cs.ucla.edu/~kohler/class/04f-aos/ref/i386.pdf
 
 Up to date Intel Manuals
-   http://www.intel.com/products/processor/manuals/index.htm
+	http://www.intel.com/products/processor/manuals/index.htm
