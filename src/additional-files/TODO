@@ -20,3 +20,7 @@ o Extend monitor's kdb to do the following:
 	- Disassemble support (see lab3 exercise 6's challenge)
 	- Print function name, file name and file number
 	- Backtrace support
+
+o Machine check exception support
+
+o Aligment check support
