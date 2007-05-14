@@ -1,3 +1,13 @@
+Study
+=====
+
+o Read about on how the assembly code access and pass C structs to functions
+
+o Understand better how protection works at the segmentation level
+  (eg, RPL vs. CPL)
+
+Implementation
+==============
 
 o boot-x86-pt_BR.txt can be better: why does the boot loader does things
   that way? Say more about kernel's GDT and paging
@@ -7,11 +17,6 @@ o PSE was implemented and is working, but all the page handling functions
 
 o Some monitor's commands scan the whole free list to do their job, it's
   possible to do better
-
-o I need to understand better how protection works at the segment level
-  (eg, RPL vs. CPL)
-
-o Read about how the assembly code access and pass C structs to functions
 
 o trapentry.S and trap.c has a lot of duplicated code (see lab3 challenge
   at page 13)
