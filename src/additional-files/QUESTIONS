@@ -1,26 +1,25 @@
+o lab3's pdf says that the software interrupt that user's code uses to
+  implement system calls is 'int 30'. This is wrong, as T_SYSCALL is
+  defined to 48, not 30. The problem is that I've seen user mode
+  trying to use 'int 30' somewhere in lab3 (user-mode-first-trace.txt)
 
 o Intel's manual says that the first instruction is fetched from physical
   address 0xFFFFFFF0H. This goes against on what was explained in lab1's
   pdf
 
+o The boot loader reads the kernel's elf header at physical address 0x10000,
+  was this address choosen at random? Why not 0x1000 (the second page)?
+
 o Why do we disable interrupts twice in boot.S?
+
+o Is my memory aligment code correct? Better to review them (boot_alloc(),
+  segment_alloc())
+
+o Looks like load_icode() can leak kernel memory
 
 o Why is it necessary to load DS, ES and SS segments with zero at the
   beginning of boot.S? Intel manual says that this registers will be zero
   at initialization time
 
-o The boot loader reads the kernel's elf header at physical address 0x10000,
-  was this address choosen at random? Why not 0x1000 (the second page)?
-
-o Is my memory aligment code correct? Better to review them (boot_alloc(),
-  segment_alloc())
-
-o Looks like load_icode() can leak kernel memory, take a look at there
-
 o Does the processor queue interrupts that arraive when interrupts are
   disabled?
-
-o lab3's pdf says that the software interrupt that user's code uses to
-  implement system calls is 'int 30'. This is wrong, as T_SYSCALL is
-  defined to 48, not 30. The problem is that I've seen user mode
-  trying to use 'int 30' somewhere in lab3 (user-mode-first-trace.txt)
