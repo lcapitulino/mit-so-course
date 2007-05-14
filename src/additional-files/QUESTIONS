@@ -19,3 +19,8 @@ o Looks like load_icode() can leak kernel memory, take a look at there
 
 o Does the processor queue interrupts that arraive when interrupts are
   disabled?
+
+o lab3's pdf says that the software interrupt that user's code uses to
+  implement system calls is 'int 30'. This is wrong, as T_SYSCALL is
+  defined to 48, not 30. The problem is that I've seen user mode
+  trying to use 'int 30' somewhere in lab3 (user-mode-first-trace.txt)
