@@ -324,14 +324,6 @@ i386_vm_init(void)
 
 	boot_map_segment(pgdir, UPAGES, n, PADDR(pages), PTE_U);
 
-	// Set the right permission for UPAGES mapping, otherwise the
-	// PDE entry will have the Supervise bit set and the resulting
-	// permission won't allow user-mode to read the pages.
-	// 
-	// XXX: Consider changing boot_map_segment() to allow this
-	// setting
-	pgdir[PDX(UPAGES)] = PTE_ADDR(pgdir[PDX(UPAGES)])|PTE_U|PTE_P;
-
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// Map this array read-only by the user at linear address UENVS
@@ -344,8 +336,6 @@ i386_vm_init(void)
 
 	boot_map_segment(pgdir, UENVS, n, PADDR(envs), PTE_U);
 
-	pgdir[PDX(UENVS)] = PTE_ADDR(pgdir[PDX(UENVS)])|PTE_U|PTE_P;
-	
 	// Check that the initial page directory has been set up correctly.
 	check_boot_pgdir();
 
