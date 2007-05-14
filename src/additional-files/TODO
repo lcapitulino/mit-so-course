@@ -9,6 +9,8 @@ o Understand better how protection works at the segmentation level
 Implementation
 ==============
 
+o lab3 exercise 7 challenge
+
 o boot-x86-pt_BR.txt can be better: why does the boot loader does things
   that way? Say more about kernel's GDT and paging
 
