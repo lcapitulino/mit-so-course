@@ -21,3 +21,12 @@ Old Intel Manual (it's interesting because it's short)
 
 Up to date Intel Manuals
 	http://www.intel.com/products/processor/manuals/index.htm
+
+GCC's inline assembly
+---------------------
+
+info
+	info gcc -> C Extensions -> Extended Asm
+
+Brennan's Guide
+	http://www.delorie.com/djgpp/doc/brennan/brennan_att_inline_djgpp.html
