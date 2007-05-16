@@ -3,13 +3,20 @@ Study
 
 o Read about on how the assembly code access and pass C structs to functions
 
-o Understand better how protection works at the segmentation level
-  (eg, RPL vs. CPL)
-
 Implementation
 ==============
 
-o lab3 exercise 7 challenge
+o sysenter support was implemented in 'lab3-sysenter-support' branch and is
+  working (try grade script). It wasn't merged yet for two reasons.
+
+  First, next labs will add a lot of code and I don't want to spend time
+  fixing rejections.
+
+  Second, in the current implementation it drops support for the old 'int'
+  method, which will make JOS not to run on Pentium processors. Consider
+  Linus' solution for this problem: http://lwn.net/Articles/18414/
+
+  So, maybe it can be merged after next lab or so.
 
 o boot-x86-pt_BR.txt can be better: why does the boot loader does things
   that way? Say more about kernel's GDT and paging
