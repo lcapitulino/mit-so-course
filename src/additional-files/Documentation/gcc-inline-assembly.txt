@@ -1,0 +1,128 @@
+GCC inline assembly
+===================
+
+The syntax
+----------
+
+o Register naming
+
+	Register names are prefixed with "%". To reference eax:
+
+	%eax
+
+o Source/Destination Ordering
+
+	Left to right. To move from eax to ebx:
+
+	movl %eax, %ebx
+
+o Constant value/immediate value format
+
+	Prefix all constant/immediate values with "$". To load eax with
+	0x666:
+
+	movl $0x666, %eax
+
+o Operator size specification
+
+	b -> byte     (1 byte)
+	w -> word     (2 bytes)
+	l -> longword (4 bytes)
+
+o Addressing a particular C variable
+
+	Only works with global variables:
+
+	_variable
+
+
+Basic inline assembly
+---------------------
+
+o Basic format
+
+	asm("statements");
+
+	It's possible to use __asm__ or __asm, if the keyword asm conflicts
+	with any other symbol in the program
+
+o Multiple statements
+
+	asm ("pushl %eax\n\t"
+	     "movl $0, %eax\n\t"
+	     "popl %eax");
+
+	The \n's and \t's are needed so the .s file that GCC generates and
+	hands GAS comes out right when you've got multiple statements per asm
+
+
+Extended inline assembly
+------------------------
+
+o Format
+
+asm("statements" : output_registers : input_registers : clobbered_registers);
+
+o Volatile keyword
+
+	You can prevent an 'asm' instruction from being deleted by writing the
+	keyword 'volatile' after the 'asm'
+
+o Constraints
+
+	'm' A memory operand is allowed, with any kind of address that the
+	    machine supports in general
+
+	'i' An immediate integer operand (one with constant value) is allowed
+
+	'g' Any register, memory or immediate integer operand is allowed,
+	    except for registers that are not general registers
+
+	'a' eax
+
+	'b' ebx
+
+	'c' ecx
+
+	'd' edx
+
+	'D' edx
+
+	'S' esi
+
+	'I' Constant in range 0 to 31 (for 32-bit shifts)
+
+	'r' A register operand is allowed provided that it is in a general
+	    register
+
+	'0', '1', '2', ... '9'
+
+	    An operand that matches the specified operand number is allowed.
+	    For example:
+
+	    asm ("combine %2,%0" : "=r" (foo) : "0" (foo), "g" (bar));
+
+	    The constraint `"0"' for operand 1 says that it must occupy the
+	    same location as operand 0.  A number in constraint is allowed
+	    only in an input operand and it must refer to an output operand
+
+o Constraints modifiers
+
+	'=' Means that this operand is write-only for this instruction: the
+	    previous value is discarded and replaced by output data (output
+	    operands must use this)
+
+	'&' Unless an output operand has this modifier, GCC may allocate it
+	    in the same register as an unrelated input operand, on the
+	    assumption the inputs are consumed before the outputs are produced.
+	    This assumption may be false if the assembler code actually
+	    consists of more than one instruction. In such a case, use `&'
+	    for each output operand that may not overlap an input
+
+o Clobber
+
+	'memory' If your assembler instructions access memory in an
+	         unpredictable fashion, add `memory' to the list of clobbered
+		 registers
+
+	'cc'     to change the condition codes (flags register)
