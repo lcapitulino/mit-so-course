@@ -8,6 +8,9 @@
 #include <kern/monitor.h>
 #include <kern/env.h>
 #include <kern/syscall.h>
+#include <kern/sched.h>
+#include <kern/kclock.h>
+#include <kern/picirq.h>
 
 static struct Taskstate ts;
 
@@ -49,6 +52,8 @@ static const char *trapname(int trapno)
 		return excnames[trapno];
 	if (trapno == T_SYSCALL)
 		return "System call";
+	if (trapno >= IRQ_OFFSET && trapno < IRQ_OFFSET + 16)
+		return "Hardware Interrupt";
 	return "(unknown trap)";
 }
 
@@ -129,25 +134,29 @@ static void
 trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
-	switch (tf->tf_trapno) {
-	case T_PGFLT:
-		page_fault_handler(tf);
-		return;
-	case T_SYSCALL:
-		tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax,
-					  tf->tf_regs.reg_edx,
-					  tf->tf_regs.reg_ecx,
-					  tf->tf_regs.reg_ebx,
-					  tf->tf_regs.reg_edi,
-					  tf->tf_regs.reg_esi);
-		return;
-	case T_DEBUG:
-		monitor_ss(tf);
-		return;
-	case T_BRKPT:
-		monitor(tf);
-		return;
-	}
+	// LAB 3: Your code here.
+ 	switch (tf->tf_trapno) {
+ 	case T_PGFLT:
+ 		page_fault_handler(tf);
+ 		return;
+ 	case T_SYSCALL:
+ 		tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax,
+ 					  tf->tf_regs.reg_edx,
+ 					  tf->tf_regs.reg_ecx,
+ 					  tf->tf_regs.reg_ebx,
+ 					  tf->tf_regs.reg_edi,
+ 					  tf->tf_regs.reg_esi);
+ 		return;
+ 	case T_DEBUG:
+ 		monitor_ss(tf);
+ 		return;
+ 	case T_BRKPT:
+ 		monitor(tf);
+ 		return;
+ 	}
+	
+	// Handle clock and serial interrupts.
+	// LAB 4: Your code here.
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
@@ -179,8 +188,6 @@ single_step_enabled(void)
 void
 trap(struct Trapframe *tf)
 {
-	cprintf("Incoming TRAP frame at %p\n", tf);
-
 	if ((tf->tf_cs & 3) == 3) {
 		// Trapped from user mode.
 		// Copy trap frame (which is currently on the stack)
@@ -195,12 +202,16 @@ trap(struct Trapframe *tf)
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
 
-	if (single_step_enabled())
-		return;
+ 	if (single_step_enabled())
+ 		return;
 
-        // Return to the current environment, which should be runnable.
-        assert(curenv && curenv->env_status == ENV_RUNNABLE);
-        env_run(curenv);
+	// If we made it to this point, then no other environment was
+	// scheduled, so we should return to the current environment
+	// if doing so makes sense.
+	if (curenv && curenv->env_status == ENV_RUNNABLE)
+		env_run(curenv);
+	else
+		sched_yield();
 }
 
 
