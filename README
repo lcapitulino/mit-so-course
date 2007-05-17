@@ -1,15 +1,15 @@
-This' my own work on the MIT SO course available at:
+This' my own work on the MIT OS course available at:
 
 http://ocw.mit.edu/OcwWeb/Electrical-Engineering-and-Computer-Science/6-828Fall-2006/CourseHome/index.htm
 
- In src/additional-files/ directory you'll find my answers, solutions and
+ In the additional-files/ directory you'll find my answers, solutions and
 other texts.
 
  To try JOS you should:
 
 1. Enter the src directory
 
-	$ cd src
+	$ cd jos-src
 
 2. Compile
 
@@ -17,7 +17,7 @@ other texts.
 
 3. Run it on bochs
 
-	$ bochs -f additional-files/bochsrc
+	$ bochs -f ../additional-files/bochsrc
 
 Luiz Fernando N. Capitulino
 <lcapitulino@gmail.com>
