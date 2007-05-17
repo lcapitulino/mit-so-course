@@ -1,0 +1,8 @@
+
+
+|-- boot -> JOS boot loader
+|-- conf -> lab config files (not kernel related)
+|-- inc  -> include files shared between kernel and user modes
+|-- kern -> kernel code
+|-- lib  -> libOS
+`-- user -> user programs
