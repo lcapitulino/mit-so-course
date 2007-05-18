@@ -1,0 +1,18 @@
+Exercise 1
+----------
+
+Q: In your implementation of env_run() you should have called lcr3().
+Before and after the call to lcr3(), your code makes references (at
+least it should) to the variable e, the argument to env_run. Upon
+loading the %cr3 register, the addressing context used by the MMU is
+instantly changed. But a virtual address (namely e) has meaning
+relative to a given address context--the address context specifies
+the physical address to which the virtual address maps. Why can the
+pointer e be dereferenced both before and after the addressing switch?
+
+ Because both page directories (kernel and user mode) has the same
+entries for the kernel addresses mapping.
+
+ That way reloading %cr3 register makes no difference, since the 'e'
+pointer will have a kernel address, which is correctly mapped in
+the just loaded page directory.
