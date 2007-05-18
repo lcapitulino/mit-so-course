@@ -1,0 +1,212 @@
+Environments
+------------
+
+ Instâncias de programas em execução em modo usuário são chamados de
+environments no JOS. Environments são análogos a processos no Unix,
+apenas a abstração é diferente.
+
+ Este documento explica como environments são criados e colocados em
+execução.
+
+1. Programas de usuário
+-----------------------
+
+ O código-fonte dos programas de usuário são armazenados no diretório
+'user'.
+
+ Diferentemente do Unix, a primeira rotina a ser executada nos programas
+de usuário do JOS chama-se umain(). 
+
+ Funciona assim: para todo programa de usuário, o símbolo '_start' é
+definido como sendo o ponto de entrada. Esse símbolo é uma função da
+biblioteca do JOS, definida no arquivo lib/entry.S.
+
+ Quando o programa de usuário é colocado em execução, o controle é passado
+para _start() que define algumas variáveis globais ('envs', 'pages',
+'vpt' e 'vpd') e chama libmain().
+
+ libmain() é outra função de biblioteca, ela define 'env' e 'binaryname'
+e chama umain(). O ponto de entrada em C, definido pelo programador.
+
+ Nesse momento o código escrito pelo programador é executado.
+
+ Existem três maneiras para um environment finalizar sua execução:
+
+	o Retorno de umain()
+	o Chamada a exit()
+	o Terminado pelo kernel
+
+ Se o programa retorna de umain(), o controle volta a libmain(), a qual
+vai chamar exit(). Esta por sua vez é apenas um wrapper para a chamada
+de sistema sys_env_destroy(0), que simplesmente destroi o environment
+atual.
+
+ O programa de usuário também pode chamar exit() diretamente, neste caso
+o controle não volta para libmain().
+
+ Finalmente, o kernel pode terminar o environment. Isso acontece quando o
+environment faz algo não permitido, como tentar acessar uma área de memória
+que não lhe pertence.
+
+ Duas observações importantes:
+
+	1. umain() tem retorno 'void', ou seja, não há como retornar um valor
+	   para o sistema o faz a função main() do Unix
+
+	2. Todo o código de biblioteca é linkado estaticamente com os
+	   programas de usuário
+
+2. env_create()
+---------------
+
+ Como o JOS ainda não possui um file-system, todo programa de usuário a ser
+executado tem que ser inserido dentro da imagem do kernel.
+
+ Isso é feito usando-se a opção '-b binary' do linker, a qual permite
+inserir blobs binários em arquivos executáveis (ver kern/Makefrag).
+
+ A função env_create() é utilizada pelo kernel para criar um environment
+a ser executado, seu protótipo é:
+
+env_create(uint8_t *binary, size_t size);
+
+ Ela recebe um ponteiro para o primeiro byte da imagem do programa a ser
+executado e seu tamanho.
+
+ Essas informações estão disponíveis na forma de símbolos, dentro da
+imagem binária do kernel (o uso da opção -b faz o linker inserir esses
+símbolos automaticamente).
+
+ Por exemplo, para o programa idle temos os seguintes símbolos:
+
+_binary_obj_user_idle_size
+	Símbolo referente a posição de memória que armazena o tamanho da
+	imagem do programa idle
+
+_binary_obj_user_idle_start
+	Símbolo referente a posição de memória onde está o primeiro byte
+	da imagem binária do programa idle
+
+_binary_obj_user_idle_end
+	Símbolo referente a posição de memória onde está o último byte
+	da imagem binária do programa idle
+
+ Então, para criar um environment do programa idle faz-se:
+
+env_create(_binary_obj_user_idle_start, _binary_obj_user_idle_size);
+
+ env_create() chama env_alloc() para alocar um novo environment e
+load_icode() para carregar os segmentos do programa em memória e configurar
+sua pilha.
+
+2.1 env_alloc()
+---------------
+
+ Visão geral dos passos executados pela função:
+
+	1. Aloca um environment do array envs[]
+	2. Cria um diretório de páginas para o environment (note que o
+	   mapeamento do kernel é o mesmo)
+	3. Gera o env_id
+	4. Configura o environment como ENV_RUNNABLE
+	5. Zera 'env_runs' e 'env_tf'
+	6. Configura os valores padrões para 'tf_ds', 'tf_es', 'tf_ss',
+	   'tf_esp', 'tf_cs'
+	7. Faz outras inicializações
+
+2.2 load_icode()
+----------------
+
+ Visão geral dos passos executados pela função:
+
+	1. Faz alguns testes de consistência
+	2. Carrega a tabela de páginas do environment
+	3. Carrega todos os segmentos do programa na memória
+	4. Volta a tabela de páginas do kernel
+	5. Mapeia a pilha do environment
+	6. Configura 'tf_eip' para apontar para o ponto de entrada
+
+3. env_run()
+------------
+
+ env_run() coloca um environment em execução. Isto é, essa função faz
+troca de contexto do kernel para o programa de usuário a ser executado.
+
+ Ela faz 'curenv' apontar para o environment que vai executar ('curenv'
+sempre aponta para o environment atual), adiciona um a 'env_runs', carrega
+a tabela de páginas do environment e chama env_pop_tf().
+
+ Esta função não retorna.
+
+3.1 env_pop_tf()
+----------------
+
+ env_pop_tf() é responsável pela mágica de colocar um programa de usuário
+em execução.
+
+ Tudo o que ela faz é configurar os registradores e executar 'iret', mas
+vamos ver em detalhes.
+
+ O código em assembly inline faz o seguinte:
+
+mov tf, %esp
+
+  Carrega o registrador ESP (ponteiro de pilha), com o valor do ponteiro
+'tf', o Trapframe do environment a ser executado.
+
+popal
+
+  Retira da pilha os registradores (nesta ordem): EDI, ESI, EBP, pula
+4 bytes, EBX, EDX, ECX, EAX.
+
+  Ou seja, restaura o conteúdo da estrutura PushRegs (exceto o membro
+oesp). Se o environment foi criado com env_alloc() eles contêm zero.
+
+popl es
+
+  Retira ES da pilha, se o environment foi criado com env_alloc() vai
+conter 'GD_UD | 3', ou seja, selector para o segmento de dados de usuário
+com RPL 3.
+
+popl ds
+
+  O mesmo que o anterior, mas para o registrador DS.
+
+addl $0x8, %esp
+
+  Pula 'tf_trapno' e 'tf_err' na pilha.
+
+iret
+
+  Antes de executar 'iret', a pilha está da seguinte maneira:
+
+  ------
+    SS
+  ------
+   ESP
+  ------
+  EFLAGS
+  ------
+    CS
+  ------
+   EIP   <-------- ESP
+  ------
+
+  Se o environment foi criado com env_create(), temos as seguintes
+configurações:
+
+	SS: GD_UD | 3
+	ESP: USTACKTOP
+	EFLAGS: 0
+	CS: GD_UT | 3
+	EIP: 0x800020 (_start())
+
+ Quando a instrução 'iret' é executada, ela faz 'pop' em todos esses
+registradores, isto é, EIP, CS, EFLAGS, ESP e SS.
+
+ Após restaurar todos os registradores, 'iret' passa a executar o
+código apontado pelo novo EIP, que é o programa de usuário!
+
+ Note que ESP e SS são 'popados' porque o processador faz uma troca de
+pilha, e a troca de pilha é necessária pois estamos passando de um
+nível de privilégio para outro (do 0 para o 3).
