@@ -33,3 +33,5 @@ o Extend monitor's kdb to do the following:
 o Machine check exception support
 
 o Aligment check support
+
+o FPU support
