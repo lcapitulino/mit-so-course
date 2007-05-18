@@ -11,6 +11,8 @@ o sysenter support was implemented in 'lab3-sysenter-support' branch and is
   conflict with next labs' code and I don't want to spend time fixing
   rejections (src/sysenter-detect-linux.patch is interesting)
 
+o Debug info when the kernel page faults
+
 o boot-x86-pt_BR.txt can be better: why does the boot loader does things
   that way? Say more about kernel's GDT and paging
 
