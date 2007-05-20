@@ -336,10 +336,23 @@ sys_page_map(envid_t srcenvid, void *srcva,
 static int
 sys_page_unmap(envid_t envid, void *va)
 {
+	int err;
+	struct Env *e;
+
 	// Hint: This function is a wrapper around page_remove().
-	
-	// LAB 4: Your code here.
-	panic("sys_page_unmap not implemented");
+
+	// va checks
+	err = check_user_va((uintptr_t) va);
+	if (err)
+		return err;
+
+	// env checks
+	err = envid2env(envid, &e, 1);
+	if (err)
+		return err;
+
+	page_remove(e->env_pgdir, va);
+	return 0;
 }
 
 // Try to send 'value' to the target env 'envid'.
@@ -430,6 +443,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_page_alloc(a1, (void *) a2, a3);
 	case SYS_page_map:
 		return sys_page_map(a1, (void *) a2, a3, (void *) a4, a5);
+	case SYS_page_unmap:
+		return sys_page_unmap(a1, (void *) a2);
 	default:
 		return -E_INVAL;
 	}
