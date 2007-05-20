@@ -233,7 +233,7 @@ mon_dump_eflags(int argc, char **argv, struct Trapframe *tf)
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-	const char *p;
+	int i;
 	uint32_t *ebp, eip;
 	struct Eipdebuginfo info;
 
@@ -247,8 +247,9 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 
 		cprintf("%s:%d: ", info.eip_file, info.eip_line);
 
-		for (p = info.eip_fn_name; *p != ':'; p++)
-			cputchar(*p);
+		// Print function name
+		for (i = 0; i < info.eip_fn_namelen; i++)
+			cputchar(info.eip_fn_name[i]);
 
 		cprintf("+%x\n", eip - info.eip_fn_addr);
 		cprintf(" eip %08x args 0x%08x 0x%08x 0x%08x\n", eip,
