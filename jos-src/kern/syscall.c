@@ -146,6 +146,22 @@ sys_env_set_pgfault_upcall(envid_t envid, void *func)
 	panic("sys_env_set_pgfault_upcall not implemented");
 }
 
+// Check 'perm' as specified by sys_page_alloc()
+// 
+// Return 0 if 'perm' is ok, -E_INVAL otherwise
+static int
+check_page_perm(int perm)
+{
+	if (!(perm & (PTE_U|PTE_P)))
+		return -E_INVAL;
+
+	perm &= ~(PTE_U|PTE_P|PTE_AVAIL|PTE_W);
+	if (perm)
+		return -E_INVAL;
+
+	return 0;
+}
+
 // Allocate a page of memory and map it at 'va' with permission
 // 'perm' in the address space of 'envid'.
 // The page's contents are set to 0.
