@@ -213,6 +213,10 @@ check_user_va(uintptr_t va)
 static int
 sys_page_alloc(envid_t envid, void *va, int perm)
 {
+	int err;
+	struct Env *e;
+	struct Page *pp;
+
 	// Hint: This function is a wrapper around page_alloc() and
 	//   page_insert() from kern/pmap.c.
 	//   Most of the new code you write should be to check the
@@ -220,8 +224,33 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	//   If page_insert() fails, remember to free the page you
 	//   allocated!
 
-	// LAB 4: Your code here.
-	panic("sys_page_alloc not implemented");
+	// permission checks
+	err = check_page_perm(perm);
+	if (err)
+		return err;
+
+	// va checks
+	err = check_user_va((uintptr_t) va);
+	if (err)
+		return err;
+
+	// env checks
+	err = envid2env(envid, &e, 1);
+	if (err)
+		return err;
+
+	// go!
+	err = page_alloc(&pp);
+	if (err)
+		return err;
+
+	err = page_insert(e->env_pgdir, pp, va, perm);
+	if (err) {
+		page_free(pp);
+		return err;
+	}
+
+	return 0;
 }
 
 // Map the page of memory at 'srcva' in srcenvid's address space
@@ -356,6 +385,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_exofork();
 	case SYS_env_set_status:
 		return sys_env_set_status(a1, a2);
+	case SYS_page_alloc:
+		return sys_page_alloc(a1, (void *) a2, a3);
 	default:
 		return -E_INVAL;
 	}
