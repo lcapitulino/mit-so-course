@@ -274,6 +274,11 @@ static int
 sys_page_map(envid_t srcenvid, void *srcva,
 	     envid_t dstenvid, void *dstva, int perm)
 {
+	int err;
+	pte_t *pte;
+	struct Page *pp;
+	struct Env *srcenv, *dstenv;
+
 	// Hint: This function is a wrapper around page_lookup() and
 	//   page_insert() from kern/pmap.c.
 	//   Again, most of the new code you write should be to check the
@@ -281,8 +286,44 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	//   Use the third argument to page_lookup() to
 	//   check the current permissions on the page.
 
-	// LAB 4: Your code here.
-	panic("sys_page_map not implemented");
+	// permission checks
+	err = check_page_perm(perm);
+	if (err)
+		return err;
+
+	// va checks
+	err = check_user_va((uintptr_t) srcva);
+	if (err)
+		return err;
+
+	err = check_user_va((uintptr_t) dstva);
+	if (err)
+		return err;
+
+	// env checks
+	err = envid2env(srcenvid, &srcenv, 1);
+	if (err)
+		return err;
+
+	err = envid2env(dstenvid, &dstenv, 1);
+	if (err)
+		return err;
+
+	// source mapping checks
+	pp = page_lookup(srcenv->env_pgdir, srcva, &pte);
+	if (!pp)
+		return -E_INVAL;
+
+	if (perm & PTE_W) {
+		if (!(srcenv->env_pgdir[PDX(srcva)] & PTE_W))
+			return -E_INVAL;
+
+		if (!(*pte & PTE_W))
+			return -E_INVAL;
+	}
+
+	// the real job...
+	return page_insert(dstenv->env_pgdir, pp, dstva, perm);
 }
 
 // Unmap the page of memory at 'va' in the address space of 'envid'.
@@ -387,6 +428,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_env_set_status(a1, a2);
 	case SYS_page_alloc:
 		return sys_page_alloc(a1, (void *) a2, a3);
+	case SYS_page_map:
+		return sys_page_map(a1, (void *) a2, a3, (void *) a4, a5);
 	default:
 		return -E_INVAL;
 	}
