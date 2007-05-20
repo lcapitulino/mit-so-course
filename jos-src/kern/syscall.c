@@ -162,6 +162,18 @@ check_page_perm(int perm)
 	return 0;
 }
 
+// Check 'va' as specified by sys_page_alloc()
+// 
+// Return 0 if 'va' is ok, -E_INVAL otherwise
+static int
+check_user_va(uintptr_t va)
+{
+	if ((va >= UTOP) || (va % PGSIZE))
+		return -E_INVAL;
+
+	return 0;
+}
+
 // Allocate a page of memory and map it at 'va' with permission
 // 'perm' in the address space of 'envid'.
 // The page's contents are set to 0.
