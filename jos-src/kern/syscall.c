@@ -162,8 +162,15 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 static int
 sys_env_set_pgfault_upcall(envid_t envid, void *func)
 {
-	// LAB 4: Your code here.
-	panic("sys_env_set_pgfault_upcall not implemented");
+	int err;
+	struct Env *e;
+
+	err = envid2env(envid, &e, 1);
+	if (err)
+		return err;
+
+	e->env_pgfault_upcall = func;
+	return 0;
 }
 
 // Check 'perm' as specified by sys_page_alloc()
@@ -446,6 +453,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_page_map(a1, (void *) a2, a3, (void *) a4, a5);
 	case SYS_page_unmap:
 		return sys_page_unmap(a1, (void *) a2);
+	case SYS_env_set_pgfault_upcall:
+		return sys_env_set_pgfault_upcall(a1, (void *) a2);
 	default:
 		return -E_INVAL;
 	}
