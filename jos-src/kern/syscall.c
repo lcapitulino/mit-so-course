@@ -85,14 +85,24 @@ sys_yield(void)
 static envid_t
 sys_exofork(void)
 {
+	int err;
+	struct Env *e;
+
 	// Create the new environment with env_alloc(), from kern/env.c.
 	// It should be left as env_alloc created it, except that
 	// status is set to ENV_NOT_RUNNABLE, and the register set is copied
 	// from the current environment -- but tweaked so sys_exofork
 	// will appear to return 0.
-	
-	// LAB 4: Your code here.
-	panic("sys_exofork not implemented");
+
+	err = env_alloc(&e, curenv->env_id);
+	if (err)
+		return err;
+
+	e->env_status = ENV_NOT_RUNNABLE;
+	e->env_tf = curenv->env_tf;
+	e->env_tf.tf_regs.reg_eax = 0;
+
+	return e->env_id;
 }
 
 // Set envid's env_status to status, which must be ENV_RUNNABLE
@@ -332,6 +342,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_yield:
 		sys_yield();
 		break;
+	case SYS_exofork:
+		return sys_exofork();
 	default:
 		return -E_INVAL;
 	}
