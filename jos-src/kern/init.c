@@ -13,6 +13,16 @@
 #include <kern/sched.h>
 #include <kern/picirq.h>
 
+// Wrapper to sched_yield()
+//
+// This is needed otherwise the compiler won't be able to
+// put a valid return address in the stack, which makes
+// kernel's backtrace incomplete
+void
+i386_run_user(void)
+{
+	sched_yield();
+}
 
 void
 i386_init(void)
@@ -57,7 +67,7 @@ i386_init(void)
 
 
 	// Schedule and run the first user environment!
-	sched_yield();
+	i386_run_user();
 
 
 }
