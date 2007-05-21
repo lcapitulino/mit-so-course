@@ -214,6 +214,18 @@ trap(struct Trapframe *tf)
 		sched_yield();
 }
 
+static void
+show_registers(const struct Trapframe *tf)
+{
+	cprintf("eax: %08x ebx: %08x ecx: %08x edx: %08x\n",
+		tf->tf_regs.reg_eax, tf->tf_regs.reg_ebx,
+		tf->tf_regs.reg_ecx, tf->tf_regs.reg_edx);
+	cprintf("esi: %08x edi: %08x ebp: %08x esp: %08x\n",
+		tf->tf_regs.reg_esi, tf->tf_regs.reg_edi,
+		tf->tf_regs.reg_ebp, tf->tf_regs.reg_oesp);
+	cprintf("ds: %08x es: %08x ss: %08x\n",
+		tf->tf_ds, tf->tf_es, tf->tf_ds);
+}
 
 void
 page_fault_handler(struct Trapframe *tf)
