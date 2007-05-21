@@ -76,6 +76,7 @@ _alltraps:
 	movw %ax, %ds
 	movw %ax, %es
 	pushl %esp
+	movl $0x0, %ebp     # nuke frame pointer
 	call trap
 	addl $0x4, %esp
 	popal
