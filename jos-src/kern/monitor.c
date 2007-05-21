@@ -247,9 +247,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 
 		cprintf("%s:%d: ", info.eip_file, info.eip_line);
 
-		// Print function name
-		for (i = 0; i < info.eip_fn_namelen; i++)
-			cputchar(info.eip_fn_name[i]);
+		show_eip_func_name(&info);
 
 		cprintf("+%x\n", eip - info.eip_fn_addr);
 		cprintf(" eip %08x args 0x%08x 0x%08x 0x%08x\n", eip,
