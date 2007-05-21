@@ -16,5 +16,6 @@ struct Eipdebuginfo {
 };
 
 int debuginfo_eip(uintptr_t eip, struct Eipdebuginfo *info);
+void show_eip_func_name(const struct Eipdebuginfo *info);
 
 #endif

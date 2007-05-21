@@ -230,3 +230,11 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	
 	return 0;
 }
+
+void show_eip_func_name(const struct Eipdebuginfo *info)
+{
+	int i;
+
+	for (i = 0; i < info->eip_fn_namelen; i++)
+		cputchar(info->eip_fn_name[i]);
+}
