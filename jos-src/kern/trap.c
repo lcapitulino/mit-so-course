@@ -249,6 +249,38 @@ show_registers(const struct Trapframe *tf)
 		tf->tf_ds, tf->tf_es, tf->tf_ds);
 }
 
+// Print a Linux-like debug info on kernel bug
+// XXX: you're welcome to make this better
+static void
+kernel_oops(const struct Trapframe *tf, uint32_t fault_va)
+{
+	struct Eipdebuginfo info;
+
+	// Greetings
+	cprintf("\nBUG: Unable to handle kernel paging request "
+		"at virtual address 0x%08x", fault_va);
+	if (!fault_va)
+		cprintf(" (NULL pointer)");
+	cputchar('\n');
+
+	// Basic debug info
+	cprintf("EIP: %08x:[<%08x>]\n", tf->tf_cs, tf->tf_eip);
+	cprintf("EFLAGS: %08x\n", tf->tf_eflags);
+	debuginfo_eip(tf->tf_eip, &info);
+	cprintf("EIP is at: ");
+	show_eip_func_name(&info);
+	cputchar('\n');
+	show_registers(tf);
+
+	if (curenv)
+		cprintf("Environment id: %d parent id: %d\n", curenv->env_id,
+			curenv->env_parent_id);
+
+	show_backtrace(tf->tf_eip, (uint32_t *) tf->tf_regs.reg_ebp);
+	cprintf("\n\nCalling the monitor...\n");
+	monitor(NULL);
+}
+
 void
 page_fault_handler(struct Trapframe *tf)
 {
@@ -261,7 +293,7 @@ page_fault_handler(struct Trapframe *tf)
 	
 	// LAB 3: Your code here.
 	if (tf->tf_cs == GD_KT)
-		panic("Page fault in kernel mode: 0x%08x\n", fault_va);
+		kernel_oops(tf, fault_va);
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
