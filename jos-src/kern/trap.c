@@ -11,6 +11,7 @@
 #include <kern/sched.h>
 #include <kern/kclock.h>
 #include <kern/picirq.h>
+#include <kern/kdebug.h>
 
 static struct Taskstate ts;
 
@@ -212,6 +213,27 @@ trap(struct Trapframe *tf)
 		env_run(curenv);
 	else
 		sched_yield();
+}
+
+static void
+show_backtrace(uint32_t eip, uint32_t *ebp)
+{
+	struct Eipdebuginfo info;
+
+	cprintf("Call trace:\n");
+
+	for (; ebp; ebp = (uint32_t *) *ebp) {
+
+		debuginfo_eip(eip, &info);
+
+		cprintf("  [<%08x>] ", info.eip_fn_addr);
+
+		show_eip_func_name(&info);
+
+		cprintf("+0x%x\n", eip - info.eip_fn_addr);
+
+		eip = *(ebp + 1);
+	}
 }
 
 static void
