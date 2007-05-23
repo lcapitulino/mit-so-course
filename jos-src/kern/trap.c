@@ -1,6 +1,7 @@
 #include <inc/mmu.h>
 #include <inc/x86.h>
 #include <inc/assert.h>
+#include <inc/string.h>
 
 #include <kern/pmap.h>
 #include <kern/trap.h>
@@ -281,6 +282,19 @@ kernel_oops(const struct Trapframe *tf, uint32_t fault_va)
 	monitor(NULL);
 }
 
+static inline int
+user_pgfault_handler(struct Env *e)
+{
+	if (!e->env_pgfault_upcall)
+		return 0;
+
+	if ((uintptr_t) e->env_pgfault_upcall >= UTOP)
+		return 0;
+
+	user_mem_assert(e, (const void *) UXSTACKTOP-PGSIZE, PGSIZE, PTE_W);
+	return 1;
+}
+
 void
 page_fault_handler(struct Trapframe *tf)
 {
@@ -323,7 +337,40 @@ page_fault_handler(struct Trapframe *tf)
 	//   To change what the user environment runs, modify 'curenv->env_tf'
 	//   (the 'tf' variable points at 'curenv->env_tf').
 	
-	// LAB 4: Your code here.
+	if (user_pgfault_handler(curenv)) {
+		// sanity checks ok, run user pgfault handler
+		uintptr_t addr;
+		struct UTrapframe utf;
+
+		// fill utf
+		memset(&utf, 0, sizeof(utf));
+		utf.utf_fault_va = fault_va;
+		utf.utf_err = tf->tf_err;
+		utf.utf_regs = tf->tf_regs;
+		utf.utf_eip = tf->tf_eip;
+		utf.utf_eflags = tf->tf_eflags;
+		utf.utf_esp = tf->tf_esp;
+
+		// too slow?
+		lcr3(curenv->env_cr3);
+
+		if ((tf->tf_esp >= UXSTACKTOP - PGSIZE) &&
+		    (tf->tf_esp < UXSTACKTOP)) {
+			// pgfault handler faulted
+			addr = tf->tf_esp - 4 - sizeof(utf);
+		} else {
+			// expected case
+			addr = UXSTACKTOP - sizeof(utf);
+		}
+		memcpy((void *) addr, &utf, sizeof(utf));
+
+		lcr3(boot_cr3);
+
+		// go!
+		curenv->env_tf.tf_eip =(uintptr_t) curenv->env_pgfault_upcall;
+		curenv->env_tf.tf_esp = addr;
+		env_run(curenv);
+	}
 
 	// Destroy the environment that caused the fault.
 	cprintf("[%08x] user fault va %08x ip %08x\n",
