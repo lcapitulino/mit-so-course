@@ -68,13 +68,27 @@ pgfault(struct UTrapframe *utf)
 static int
 duppage(envid_t envid, unsigned pn)
 {
-	int r;
+	int perm, err;
 	void *addr;
 	pte_t pte;
 
-	// LAB 4: Your code here.
-	panic("duppage not implemented");
-	return 0;
+	pte = vpt[pn];
+	addr = (void *) (pn * PGSIZE);
+	perm = pte & 0xFFF;
+	perm &= ~(PTE_A|PTE_D);
+
+	if (perm & (PTE_W|PTE_COW)) {
+		perm &= ~PTE_W;
+		perm |= PTE_COW;
+	}
+
+	// Map in the child
+	err = sys_page_map(0, addr, envid, addr, perm);
+	if (err)
+		return err;
+
+	// Remaps in the parent
+	return sys_page_map(0, addr, 0, addr, perm);
 }
 
 //
