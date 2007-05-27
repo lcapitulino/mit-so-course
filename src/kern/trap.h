@@ -38,4 +38,21 @@ void trap_ex_mcheck(void);
 void trap_ex_simderr(void);
 void trap_ex_syscall(void);
 
+void int_nr_0(void);
+void int_nr_1(void);
+void int_nr_2(void);
+void int_nr_3(void);
+void int_nr_4(void);
+void int_nr_5(void);
+void int_nr_6(void);
+void int_nr_7(void);
+void int_nr_8(void);
+void int_nr_9(void);
+void int_nr_10(void);
+void int_nr_11(void);
+void int_nr_12(void);
+void int_nr_13(void);
+void int_nr_14(void);
+void int_nr_15(void);
+
 #endif /* JOS_KERN_TRAP_H */
