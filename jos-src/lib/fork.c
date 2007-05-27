@@ -24,7 +24,14 @@ pgfault(struct UTrapframe *utf)
 	//   Use the read-only page table mappings at vpt
 	//   (see <inc/memlayout.h>).
 
-	// LAB 4: Your code here.
+	if (!(err & FEC_WR))
+		panic("pgfault: fault is not a write (err: %08x va: %08x ip: %08x)",
+		      err, addr, utf->utf_eip);
+
+	if (!(vpt[((uint32_t) addr / PGSIZE)] & PTE_COW))
+		panic("pgfault: va %08x (%08x) pte %08x is not PTE_COW",
+		      addr, ROUNDDOWN(addr, PGSIZE),
+		      vpt[((uint32_t) addr / PGSIZE)]);
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
 	// copy the data from the old page to the new page, then move the new
@@ -32,10 +39,20 @@ pgfault(struct UTrapframe *utf)
 	// Hint:
 	//   You should make three system calls.
 	//   No need to explicitly delete the old page's mapping.
-	
-	// LAB 4: Your code here.
-	
-	panic("pgfault not implemented");
+
+	r = sys_page_alloc(0, PFTEMP, PTE_P|PTE_U|PTE_W);
+	if (r)
+		panic("sys_page_alloc: %e", r);
+
+	memcpy(PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
+
+	r = sys_page_map(0, PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_P|PTE_U|PTE_W);
+	if (r)
+		panic("sys_page_map: %e", r);
+
+	r = sys_page_unmap(0, PFTEMP);
+	if (r)
+		panic("sys_page_unmap: %e", r);
 }
 
 //
