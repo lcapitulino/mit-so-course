@@ -655,7 +655,18 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	pp->pp_ref++;
 	pte = page2kva(pp);
 	memset(pte, 0, PGSIZE);
-	*pde = PTE_ADDR(PADDR(pte))|create;
+
+	// XXX: Always set PTE_W in page directory entries
+	// 
+	// If the first page of a page table is read-only, the page
+	// table's PDE will be read-only too. The problem is that it
+	// won't be possible to create read/write pages in that page
+	// table: since the PDE is read-only, all the pages in that
+	// page-table are read-only by default!
+	// 
+	// We set PTE_W here so that the page's permissions will be
+	// determined by the PTE.
+	*pde = PTE_ADDR(PADDR(pte))|create|PTE_W;
 
 	return ((pte_t *) pte + PTX(va));
 }
