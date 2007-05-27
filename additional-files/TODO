@@ -1,10 +1,18 @@
 Study
 =====
 
-o Read about on how the assembly code access and pass C structs to functions
+o write a document to explain how the assembly code access and pass C structs
+  to functions
+
+o write a document to explain how copy-on-write fork works on JOS
 
 Implementation
 ==============
+
+o lab4 has interesting challenges, don't go to lab5 before doing some of them
+
+o check how Linux (or any other open OS) handle the PDE's PTE_W flag
+  (f83a2d0dc26edb504b26fdd8582dc50a73bbab02)
 
 o sysenter support was implemented in 'lab3-sysenter-support' branch and is
   working (try grade script). It wasn't merged because it'll probably
@@ -17,19 +25,19 @@ o boot-x86-pt_BR.txt can be better: why does the boot loader does things
 o PSE was implemented and is working, but all the page handling functions
   ignores it and assumes 4KB pages
 
-o Some monitor's commands scan the whole free list to do their job, it's
+o some monitor's commands scan the whole free list to do their job, it's
   possible to do better
 
 o trapentry.S and trap.c has a lot of duplicated code (see lab3 challenge
   at page 13)
 
-o Extend monitor's kdb to do the following:
+o extend monitor's kdb to do the following:
 	- Disassemble support (see lab3 exercise 6's challenge)
 	- Print function name, file name and file number
 	- Backtrace support
 
-o Machine check exception support
+o machine check exception support
 
-o Aligment check support
+o aligment check support
 
 o FPU support
