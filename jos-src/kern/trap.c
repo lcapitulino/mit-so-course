@@ -282,19 +282,6 @@ kernel_oops(const struct Trapframe *tf, uint32_t fault_va)
 	monitor(NULL);
 }
 
-static inline int
-user_pgfault_handler(struct Env *e)
-{
-	if (!e->env_pgfault_upcall)
-		return 0;
-
-	if ((uintptr_t) e->env_pgfault_upcall >= UTOP)
-		return 0;
-
-	user_mem_assert(e, (const void *) UXSTACKTOP-PGSIZE, PGSIZE, PTE_W);
-	return 1;
-}
-
 void
 page_fault_handler(struct Trapframe *tf)
 {
@@ -337,8 +324,7 @@ page_fault_handler(struct Trapframe *tf)
 	//   To change what the user environment runs, modify 'curenv->env_tf'
 	//   (the 'tf' variable points at 'curenv->env_tf').
 	
-	if (user_pgfault_handler(curenv)) {
-		// sanity checks ok, run user pgfault handler
+	if (curenv->env_pgfault_upcall) {
 		uintptr_t addr;
 		struct UTrapframe utf;
 
@@ -362,6 +348,10 @@ page_fault_handler(struct Trapframe *tf)
 			// expected case
 			addr = UXSTACKTOP - sizeof(utf);
 		}
+
+		user_mem_assert(curenv, (const void *) addr,
+				sizeof(utf), PTE_W);
+
 		memcpy((void *) addr, &utf, sizeof(utf));
 
 		lcr3(boot_cr3);
