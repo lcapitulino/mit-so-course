@@ -110,8 +110,62 @@ duppage(envid_t envid, unsigned pn)
 envid_t
 fork(void)
 {
-	// LAB 4: Your code here.
-	panic("fork not implemented");
+	uint32_t pn;
+	envid_t envid;
+	int pdeno, pteno, err;
+
+	set_pgfault_handler(pgfault);
+
+	envid = sys_exofork();
+	if (envid < 0)
+		return envid;
+	if (envid == 0) {
+		// Child
+		env = &envs[ENVX(sys_getenvid())];
+		return 0;
+	}
+
+	// Parent
+	pn = 0;
+
+	for (pdeno = 0; pdeno < VPD(UTOP); pdeno++) {
+		if (vpd[pdeno] == 0) {
+			// skip empty PDEs
+			pn += NPTENTRIES;
+			continue;
+		}
+
+		for (pteno = 0; pteno < NPTENTRIES; pteno++,pn++) {
+			if (vpt[pn] == 0) {
+				// skipt empty PTEs
+				continue;
+			}
+
+			// Do not duplicate the exception stack
+			if ((pn * PGSIZE) == (UXSTACKTOP - PGSIZE))
+				continue;
+
+			err = duppage(envid, pn);
+			if (err)
+				panic("duppage: %e");
+		}
+	}
+
+	// Child's mapping done, allocate a page for its exception
+	// stack, set its page fault handler and mark it runnable
+
+	err = sys_page_alloc(envid, (void *) (UXSTACKTOP - PGSIZE),
+			     PTE_P|PTE_U|PTE_W);
+	if (err)
+		panic("sys_page_alloc: e%", err);
+
+	sys_env_set_pgfault_upcall(envid, env->env_pgfault_upcall);
+
+	err = sys_env_set_status(envid, ENV_RUNNABLE);
+	if (err)
+		panic("sys_env_set_status: %e", err);
+
+	return envid;
 }
 
 // Challenge!
