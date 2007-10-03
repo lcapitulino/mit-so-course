@@ -172,9 +172,11 @@ trap_dispatch(struct Trapframe *tf)
  		monitor(tf);
  		return;
  	}
-	
+
 	// Handle clock and serial interrupts.
 	// LAB 4: Your code here.
+	if (tf->tf_trapno == IRQ_OFFSET)
+		sched_yield();
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
