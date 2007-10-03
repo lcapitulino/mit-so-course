@@ -85,6 +85,7 @@ TRAPHANDLER_NOEC(int_nr_15, IRQ_OFFSET+15)
 
 .globl _alltraps
 _alltraps:
+	cli
 	pushl %ds
 	pushl %es
 	pushal
