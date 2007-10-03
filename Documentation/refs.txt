@@ -5,6 +5,10 @@ MIT course readings
 -------------------
 	http://ocw.mit.edu/OcwWeb/Electrical-Engineering-and-Computer-Science/6-828Fall-2006/Readings/index.htm
 
+Someone has a 2003 version on-line
+----------------------------------
+	http://stuff.mit.edu/afs/sipb/user/yoav/athena/foo/mylab/
+
 bochs
 -----
 	http://bochs.sourceforge.net/
