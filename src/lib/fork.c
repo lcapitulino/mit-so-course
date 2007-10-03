@@ -147,7 +147,7 @@ fork(void)
 
 			err = duppage(envid, pn);
 			if (err)
-				panic("duppage: %e");
+				panic("duppage: %e", err);
 		}
 	}
 
