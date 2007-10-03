@@ -1,5 +1,1 @@
-lab4: Exercise 10
-
---> Exercise 9 is already done in branch 'lab4-exer9', should be merged
-    when exercise 10 is done (create a new branch from 'lab4-exer9' to
-    work on exercise 10)
+lab4: Inter-Process communication (IPC)
