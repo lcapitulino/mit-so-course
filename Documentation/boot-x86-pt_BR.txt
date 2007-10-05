@@ -87,18 +87,16 @@ espaço para o seu código e dados.
  o Verificar a quantidade de memória disponível no sistema
  o Carregar o código do boot loader e transferir o controle para ele
 
- O último ítem é também o último procedimento que a BIOS executa. Ela procura
+ O último item é também o último procedimento que a BIOS executa. Ela procura
 por um dispositivo de boot (disco rígido ou disquete, normalmente configurado
 pelo usuário) e carrega seu primeiro setor (512 bytes) no intervalo de
-endereço físico 0x00007C00-0x00007DFF e, usando a instrução jmp, pula para
-esse endereço, transferindo o controle para o boot loader.
+endereço físico 0x00007C00-0x00007DFF (também 512 bytes) e, usando a instrução
+jmp, pula para esse endereço, transferindo o controle para o boot loader.
 
 FIXME 1: Falar sobre boot em CD-ROM.
 
 FIXME 2: O manual da Intel diz que o processador busca a primeira instrução
-no endereço físico 0xFFFFFFF0H, e depois que o registrador CS é carregado
-novamente o processador começa a fazer a tradução de endereços de modo-real.
-Essa fato torna inválido a primeira parte dessa explicação.
+no endereço físico 0xFFFFFFF0H. Como isso?
 
 4. Boot Loader
 --------------
@@ -125,12 +123,12 @@ toda a memória disponível no computador pode ser endereçada.
  O código em C do boot loader é igualmente simples, tudo o que ele faz é
 carregar o kernel do disco rígido e chamar o entry point do cabeçalho ELF.
 
- O kernel é carregado no endereço físico 0x0010000, e tanto a informação
-do tamanho do kernel quanto o entry point (ie, o código que deve começar a
-ser executado) são lidas do cabeçalho ELF.
+ O kernel é carregado no endereço físico 0x00100000 (1M), e tanto a
+informação do tamanho do kernel quanto o entry point (ie, o código que deve
+começar a ser executado) são lidas do cabeçalho ELF.
 
  Boot loaders reais, como o GRUB ou LILO, normalmente tem mais estágios.
-O GRUB por exemplo, pode chegar a ter três estágios (1, 1.5 e 2), sendo
+O GRUB, por exemplo, pode chegar a ter três estágios (1, 1.5 e 2), sendo
 que os primeiros estágios carregam os estágios seguintes e o último vai
 carregar o kernel do disco.
 
@@ -171,9 +169,9 @@ o descritor 0x0008 na GDT, e adiciona a base do segmento ao deslocamento
  O processador então coloca 0x0010013A no barramento de endereços, acessando
 i386_init() no endereço físico correto.
 
- i386_init() é o ponto de entrada do código em C, ela vai inicializar o BSS
-do kernel com zeros, inicializar a console e chamar monitor(), a qual vai
-esperar por uma entrada do usuário e executar a função desejada.
+ i386_init() é o ponto de entrada do código em C. Essa função faz diversas
+inicializações (console, memória, hardware, etc) e coloca o primeiro
+programa de usuário para executar.
 
 6. Referências
 --------------
@@ -186,3 +184,5 @@ o Modo protegido
 
 o Intel 64 and IA-32 Architectures Software Developer's Manual,
   System Programming Guide, Part 1
+
+o 6.828 Fall 2006 Lab 1: Booting a PC
