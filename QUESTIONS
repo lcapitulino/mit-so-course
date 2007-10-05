@@ -7,11 +7,6 @@ o The boot loader reads the kernel's elf header at physical address 0x10000,
 
 o Why do we disable interrupts twice in boot.S?
 
-o Is my memory aligment code correct? Better to review them (boot_alloc(),
-  segment_alloc())
-
-o Looks like load_icode() can leak kernel memory
-
 o Why is it necessary to load DS, ES and SS segments with zero at the
   beginning of boot.S? Intel manual says that this registers will be zero
   at initialization time
