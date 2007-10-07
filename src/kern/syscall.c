@@ -468,8 +468,25 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 static int
 sys_ipc_recv(void *dstva)
 {
+	int err;
+	struct Env *e;
+
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
+	err = envid2env(0, &e, 0);
+	if (err)
+		return err;
+
+	e->env_ipc_dstva = (void *) UTOP;
+
+	if ((uintptr_t) dstva < UTOP) {
+		if ((uintptr_t) dstva % PGSIZE)
+			return -E_INVAL;
+		e->env_ipc_dstva = dstva;
+	}
+
+	e->env_ipc_recving = 1;
+	e->env_status = ENV_NOT_RUNNABLE;
+
 	return 0;
 }
 
@@ -508,6 +525,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_env_set_pgfault_upcall(a1, (void *) a2);
 	case SYS_ipc_try_send:
 		return sys_ipc_try_send(a1, a2, (void *) a3, a4);
+	case SYS_ipc_recv:
+		return sys_ipc_recv((void *) a1);
 	default:
 		return -E_INVAL;
 	}
