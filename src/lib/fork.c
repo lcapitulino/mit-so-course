@@ -80,15 +80,18 @@ duppage(envid_t envid, unsigned pn)
 	if (perm & (PTE_W|PTE_COW)) {
 		perm &= ~PTE_W;
 		perm |= PTE_COW;
+
+		// Map in the child
+		err = sys_page_map(0, addr, envid, addr, perm);
+		if (err)
+			return err;
+
+		// Remaps in the parent
+		return sys_page_map(0, addr, 0, addr, perm);
 	}
 
 	// Map in the child
-	err = sys_page_map(0, addr, envid, addr, perm);
-	if (err)
-		return err;
-
-	// Remaps in the parent
-	return sys_page_map(0, addr, 0, addr, perm);
+	return sys_page_map(0, addr, envid, addr, perm);
 }
 
 //
