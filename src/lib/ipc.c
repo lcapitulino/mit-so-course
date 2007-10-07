@@ -33,7 +33,16 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 void
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
+	int err;
+
 	// LAB 4: Your code here.
-	panic("ipc_send not implemented");
+	for (; ; ) {
+		err = sys_ipc_try_send(to_env, val, pg, perm);
+		if (!err || err == 1)
+			return;
+		if (err != -E_IPC_NOT_RECV)
+			panic("sys_ipc_try_send(): %e\n", err);
+		sys_yield();
+	}
 }
 
