@@ -261,6 +261,30 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	return 0;
 }
 
+// Does the actual page map work
+static int
+page_map(struct Env *srcenv, void *srcva,
+	 struct Env *dstenv, void *dstva, int perm)
+{
+	pte_t *pte;
+	struct Page *pp;
+
+	pp = page_lookup(srcenv->env_pgdir, srcva, &pte);
+	if (!pp)
+		return -E_INVAL;
+
+	if (perm & PTE_W) {
+		if (!(srcenv->env_pgdir[PDX(srcva)] & PTE_W))
+			return -E_INVAL;
+
+		if (!(*pte & PTE_W))
+			return -E_INVAL;
+	}
+
+	// the real job...
+	return page_insert(dstenv->env_pgdir, pp, dstva, perm);
+}
+
 // Map the page of memory at 'srcva' in srcenvid's address space
 // at 'dstva' in dstenvid's address space with permission 'perm'.
 // Perm has the same restrictions as in sys_page_alloc, except
@@ -283,8 +307,6 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	     envid_t dstenvid, void *dstva, int perm)
 {
 	int err;
-	pte_t *pte;
-	struct Page *pp;
 	struct Env *srcenv, *dstenv;
 
 	// Hint: This function is a wrapper around page_lookup() and
@@ -317,21 +339,8 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	if (err)
 		return err;
 
-	// source mapping checks
-	pp = page_lookup(srcenv->env_pgdir, srcva, &pte);
-	if (!pp)
-		return -E_INVAL;
-
-	if (perm & PTE_W) {
-		if (!(srcenv->env_pgdir[PDX(srcva)] & PTE_W))
-			return -E_INVAL;
-
-		if (!(*pte & PTE_W))
-			return -E_INVAL;
-	}
-
-	// the real job...
-	return page_insert(dstenv->env_pgdir, pp, dstva, perm);
+	// the real job
+	return page_map(srcenv, srcva, dstenv, dstva, perm);
 }
 
 // Unmap the page of memory at 'va' in the address space of 'envid'.
