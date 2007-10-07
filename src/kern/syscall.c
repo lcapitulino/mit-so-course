@@ -250,13 +250,14 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	err = page_alloc(&pp);
 	if (err)
 		return err;
-	memset(page2kva(pp), 0, PGSIZE);
-	
+
 	err = page_insert(e->env_pgdir, pp, va, perm);
 	if (err) {
 		page_free(pp);
 		return err;
 	}
+
+	memset(page2kva(pp), 0, PGSIZE);
 
 	return 0;
 }
