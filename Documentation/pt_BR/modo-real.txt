@@ -1,0 +1,81 @@
+		    Gerenciamento de memória em modo real
+
+			Luiz Fernando N. Capitulino
+			  <lcapitulino@gmail.com>
+
+1. Introdução
+-------------
+
+ Este documento é um resumo de como a memória do computador é gerenciada
+em modo real.
+
+2. Visão geral
+--------------
+
+ Quando o computador é ligado o processador está em um modo de operação
+conhecido como 'modo real'. Neste modo o processador é um genuíno Intel
+8086, o primeiro processador da família x86.
+
+ Com relação ao gerenciamento de memória as principais características
+do modo real são:
+
+ o Suporta até 1-MByte de endereçamento físico
+ o O espaço de endereçamento é divido em segmentos de até 64 KBytes cada
+ o Endereços de memória são formados por 'segmento:deslocamento'
+ o Oito registradores de 16 bits de propósito geral: AX, BX, CX, DX, SP,
+   BP, SI e DI
+ o Quatro registradores de seguimento: CS (código); DS e ES (dados);
+   SS (pilha)
+ o EFLAGS é 16 bits
+ o Uma tabela de interrupção simples, chamada 'interrupt vector table'
+
+3. Tradução de endereços
+------------------------
+
+ Ao contrário do modo protegido, o modo real *não* utiliza os
+seletores de seguimento como indíces em um tabela. Ao invés disso,
+o seletor de segmento é multiplicado por 16 para formar um endereço
+base. O deslocamento é somado a base e o endereço de 20-bits
+resultante é utilizado como endereço físico.
+
+ Ou seja, temos a seguinte formula:
+
+	endereço físico = 16 * seguimento + deslocamento
+
+ Por exemplo, para acessar o endereço 0xf000:0xfff0 o processador
+faz:
+
+	16 * 0xf000
+	= 0xf0000 + 0xfff0
+	= 0xffff0               <--- Endereço físico
+
+ Note que seguimentos são usados no 8086 para ser possível endereçar
+1-Mbyte, pois com registradores de 16-bits é apenas possível endereçar
+64-Kbytes.
+
+4. Tratamento de interrupções e exceções
+----------------------------------------
+
+ Assim como no modo protegido, quando uma interrupção ou exceção
+ocorre, o processador usa o número da interrução/exceção como
+indice em uma tabela de ponteiros para funções. Essa tabela é chamada
+'interrupt vector table' ou simplesmente tabela de interrupções.
+
+ Para mais detalhes sobre como a tabela deve ser configurada e
+seu funcionamento, consulte o manual da Intel (seção
+15.1.4 "Interrupt and Exception Handling").
+
+5. Informações adicionais
+-------------------------
+
+ Há mais detalhes sobre o modo real que é necessário saber para ser ter
+um bom entendimento de como esse modo funciona.
+
+ Por exemplo, quando o processador i386 está operando em modo real, é
+possível usar algumas extenções (os registradores FS e GS são uma delas).
+
+ Além disso é recomendado estar ciente das instruções que são suportadas
+em modo real.
+
+ Para mais informações, consulte o manual da Intel (seção
+15.1 Real-address mode).
