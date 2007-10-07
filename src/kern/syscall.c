@@ -408,8 +408,50 @@ sys_page_unmap(envid_t envid, void *va)
 static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
+	int err, ret;
+	struct Env *recenv, *sndenv;
+
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	if (srcva) {
+		if ((uintptr_t) srcva >= UTOP)
+			return -E_INVAL;
+
+		if ((uintptr_t) srcva % PGSIZE)
+			return -E_INVAL;
+
+		if (check_page_perm(perm))
+			return -E_INVAL;
+	}
+
+	err = envid2env(envid, &recenv, 0);
+	if (err)
+		return err;
+
+	err = envid2env(0, &sndenv, 0);
+	if (err)
+		return err;
+
+	if (!recenv->env_ipc_recving)
+		return -E_IPC_NOT_RECV;
+
+	ret = 0;
+	recenv->env_ipc_perm = 0;
+	recenv->env_ipc_recving = 0;
+
+	if (srcva && (uintptr_t) recenv->env_ipc_dstva < UTOP) {
+		err = page_map(sndenv, srcva, recenv, recenv->env_ipc_dstva,
+			       perm);
+		if (err)
+			return err;
+		recenv->env_ipc_perm = perm;
+		ret = 1;
+	}
+
+	recenv->env_ipc_from = curenv->env_id;
+	recenv->env_ipc_value = value;
+	recenv->env_status = ENV_RUNNABLE;
+
+	return ret;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -464,6 +506,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_page_unmap(a1, (void *) a2);
 	case SYS_env_set_pgfault_upcall:
 		return sys_env_set_pgfault_upcall(a1, (void *) a2);
+	case SYS_ipc_try_send:
+		return sys_ipc_try_send(a1, a2, (void *) a3, a4);
 	default:
 		return -E_INVAL;
 	}
