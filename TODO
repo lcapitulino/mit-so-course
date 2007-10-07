@@ -9,8 +9,6 @@ o write a document to explain how copy-on-write fork works on JOS
 Implementation
 ==============
 
-o lab4 has interesting challenges, don't go to lab5 before doing some of them
-
 o check how Linux (or any other open OS) handle the PDE's PTE_W flag
   (f83a2d0dc26edb504b26fdd8582dc50a73bbab02)
 
