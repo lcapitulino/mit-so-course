@@ -1,12 +1,12 @@
 		    Gerenciamento de memória em modo real
 
-			Luiz Fernando N. Capitulino
-			  <lcapitulino@gmail.com>
+			  Luiz Fernando N. Capitulino
+			    <lcapitulino@gmail.com>
 
 1. Introdução
 -------------
 
- Este documento é um resumo de como a memória do computador é gerenciada
+ Este documento é um resumo de como o gerenciamento de memória é feito
 em modo real.
 
 2. Visão geral
@@ -21,12 +21,12 @@ do modo real são:
 
  o Suporta até 1-MByte de endereçamento físico
  o O espaço de endereçamento é divido em segmentos de até 64 KBytes cada
- o Endereços de memória são formados por 'segmento:deslocamento'
+ o Software gera endereços de memória no formato: 'segmento:deslocamento'
  o Oito registradores de 16 bits de propósito geral: AX, BX, CX, DX, SP,
    BP, SI e DI
  o Quatro registradores de seguimento: CS (código); DS e ES (dados);
    SS (pilha)
- o EFLAGS é 16 bits
+ o EFLAGS tem 16 bits
  o Uma tabela de interrupção simples, chamada 'interrupt vector table'
 
 3. Tradução de endereços
@@ -68,11 +68,12 @@ seu funcionamento, consulte o manual da Intel (seção
 5. Informações adicionais
 -------------------------
 
- Há mais detalhes sobre o modo real que é necessário saber para ser ter
-um bom entendimento de como esse modo funciona.
+ Para se adquirir um bom conhecimento sobre o modo real, é necessário
+aprender mais sobre diversos outros detalhes.
 
  Por exemplo, quando o processador i386 está operando em modo real, é
-possível usar algumas extenções (os registradores FS e GS são uma delas).
+possível usar algumas extenções (a disponibilidade dos registradores
+FS e GS é uma delas).
 
  Além disso é recomendado estar ciente das instruções que são suportadas
 em modo real.
