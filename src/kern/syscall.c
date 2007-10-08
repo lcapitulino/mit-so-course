@@ -428,12 +428,12 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	if (err)
 		return err;
 
+	if (!recenv->env_ipc_recving)
+		return -E_IPC_NOT_RECV;
+
 	err = envid2env(0, &sndenv, 0);
 	if (err)
 		return err;
-
-	if (!recenv->env_ipc_recving)
-		return -E_IPC_NOT_RECV;
 
 	ret = 0;
 	recenv->env_ipc_perm = 0;
