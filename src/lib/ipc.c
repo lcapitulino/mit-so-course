@@ -31,12 +31,15 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 	if (err)
 		return err;
 
-	if (from_env_store)
-		*from_env_store = env->env_ipc_from;
-	if (perm_store)
-		*perm_store = env->env_ipc_perm;
+	// We don't use the 'env' pointer here because it's
+	// useless if the caller has forked with sfork()
 
-	return env->env_ipc_value;
+	if (from_env_store)
+		*from_env_store = envs[ENVX(sys_getenvid())].env_ipc_from;
+	if (perm_store)
+		*perm_store = envs[ENVX(sys_getenvid())].env_ipc_perm;
+
+	return envs[ENVX(sys_getenvid())].env_ipc_value;
 }
 
 // Send 'val' (and 'pg' with 'perm', assuming 'pg' is nonnull) to 'toenv'.
