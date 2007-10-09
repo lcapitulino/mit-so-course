@@ -2,3 +2,8 @@ o Is my memory aligment code correct? Better to review them (boot_alloc(),
   segment_alloc())
 
 o Looks like load_icode() can leak kernel memory
+
+o I'm not completely sure sfork() is right
+
+o PSE was implemented and is working, but all the page handling functions
+  ignores it and assumes 4KB pages
