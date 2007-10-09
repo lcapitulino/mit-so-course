@@ -6,6 +6,8 @@ o write a document to explain how the assembly code access and pass C structs
 
 o write a document to explain how copy-on-write fork works on JOS
 
+o write a document to explain how JOS manages memory
+
 Implementation
 ==============
 
@@ -16,9 +18,6 @@ o sysenter support was implemented in 'lab3-sysenter-support' branch and is
   working (try grade script). It wasn't merged because it'll probably
   conflict with next labs' code and I don't want to spend time fixing
   rejections (src/sysenter-detect-linux.patch is interesting)
-
-o PSE was implemented and is working, but all the page handling functions
-  ignores it and assumes 4KB pages
 
 o some monitor's commands scan the whole free list to do their job, it's
   possible to do better
