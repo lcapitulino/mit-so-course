@@ -26,6 +26,8 @@ o some monitor's commands scan the whole free list to do their job, it's
 o trapentry.S and trap.c has a lot of duplicated code (see lab3 challenge
   at page 13)
 
+o sfork() duplicates code from fork()
+
 o extend monitor's kdb to do the following:
 	- Disassemble support (see lab3 exercise 6's challenge)
 	- Print function name, file name and file number

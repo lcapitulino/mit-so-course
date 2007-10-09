@@ -172,9 +172,79 @@ fork(void)
 }
 
 // Challenge!
+// 
+// FIXME: Duplicates code from fork()
 int
 sfork(void)
 {
-	panic("sfork not implemented");
-	return -E_INVAL;
+	pte_t pte;
+	void *addr;
+	uint32_t pn;
+	envid_t envid;
+	int perm, pdeno, pteno, err;
+
+	set_pgfault_handler(pgfault);
+
+	envid = sys_exofork();
+	if (envid < 0)
+		return envid;
+	if (envid == 0) {
+		// Child
+		env = &envs[ENVX(sys_getenvid())];
+		return 0;
+	}
+
+	// Parent
+	pn = 0;
+
+	for (pdeno = 0; pdeno < VPD(UTOP); pdeno++) {
+		if (vpd[pdeno] == 0) {
+			// skip empty PDEs
+			pn += NPTENTRIES;
+			continue;
+		}
+
+		for (pteno = 0; pteno < NPTENTRIES; pteno++,pn++) {
+
+			pte = vpt[pn];
+			if (pte == 0) {
+				// skipt empty PTEs
+				continue;
+			}
+
+			// Do not duplicate the exception stack
+			if ((pn * PGSIZE) == (UXSTACKTOP - PGSIZE))
+				continue;
+
+			if ((pn * PGSIZE) == (USTACKTOP - PGSIZE)) {
+				err = duppage(envid, pn);
+				if (err)
+					panic("duppage: %e", err);
+				continue;
+			}
+
+			addr = (void *) (pn * PGSIZE);
+			perm = pte & 0xFFF;
+			perm &= ~(PTE_A|PTE_D);
+			err = sys_page_map(0, addr, envid, addr, perm);
+			if (err)
+				panic("sys_page_map: %e", err);
+		}
+	}
+
+	// Child's mapping done, allocate a page for its exception
+	// stack, set its page fault handler and mark it runnable
+
+	err = sys_page_alloc(envid, (void *) (UXSTACKTOP - PGSIZE),
+			     PTE_P|PTE_U|PTE_W);
+	if (err)
+		panic("sys_page_alloc: e%", err);
+
+	sys_env_set_pgfault_upcall(envid, env->env_pgfault_upcall);
+
+	err = sys_env_set_status(envid, ENV_RUNNABLE);
+	if (err)
+		panic("sys_env_set_status: %e", err);
+
+	return envid;
 }
