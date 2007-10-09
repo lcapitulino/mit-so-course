@@ -47,6 +47,7 @@ KERN_BINFILES :=	user/idle \
 			user/faultbadhandler \
 			user/faultevilhandler \
 			user/forktree \
+			user/sforktree \
 			user/spin \
 			user/fairness \
 			user/pingpong \
