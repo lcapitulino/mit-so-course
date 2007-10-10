@@ -3,7 +3,9 @@ o Is my memory aligment code correct? Better to review them (boot_alloc(),
 
 o Looks like load_icode() can leak kernel memory
 
-o I'm not completely sure sfork() is right
-
 o PSE was implemented and is working, but all the page handling functions
   ignores it and assumes 4KB pages
+
+o Programs using sfork() needs to play some tricks with the global
+  'env' pointer in order to not segfault (see sforktree.c). I don't
+  know if this' a problem in sfork() implementation or if it's expected
