@@ -178,6 +178,9 @@ trap_dispatch(struct Trapframe *tf)
 	if (tf->tf_trapno == IRQ_OFFSET)
 		sched_yield();
 
+	// Handle keyboard interrupts.
+	// LAB 5: Your code here.
+
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)
