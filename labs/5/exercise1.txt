@@ -1,0 +1,9 @@
+Exercise 1
+----------
+
+Q: Do you have to do anything else to ensure that this I/O privilege setting is saved and
+restored properly when you subsequently switch from one environment to another? Make
+sure you understand how this environment state is handled.
+
+ No, it's not necessary to do anything else. The EFLAGS register is automatically
+saved and restored when switching tasks.
