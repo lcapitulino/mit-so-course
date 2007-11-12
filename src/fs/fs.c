@@ -97,6 +97,7 @@ read_block(uint32_t blockno, char **blk)
 void
 write_block(uint32_t blockno)
 {
+	int r;
 	char *addr;
 
 	if (!block_is_mapped(blockno))
@@ -104,7 +105,17 @@ write_block(uint32_t blockno)
 	
 	// Write the disk block and clear PTE_D.
 	// LAB 5: Your code here.
-	panic("write_block not implemented");
+	if (!block_is_dirty(blockno))
+		return;
+
+	addr = diskaddr(blockno);
+	r = ide_write(blockno * BLKSECTS, addr, BLKSECTS);
+	if (r)
+		panic("write_block(): ide_write() failed: %e\n", r);
+
+	r = sys_page_map(0, addr, 0, addr, PTE_U|PTE_P|PTE_W);
+	if (r)
+		panic("write_block(): sys_page_map() failed: %e\n", r);
 }
 
 // Make sure this block is unmapped.
