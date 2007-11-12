@@ -233,15 +233,29 @@ read_bitmap(void)
 	// Hint: Use read_block.
 
 	// LAB 5: Your code here.
-	panic("read_bitmap not implemented");
+	assert(super);
+
+	r = read_block(2, &blk);
+	if (r)
+		panic("read_bitmap(): could not read first block: %e\n", r);
+
+	bitmap = (uint32_t *) blk;
+
+	for (i = 3; i <= (super->s_nblocks / BLKBITSIZE); i++) {
+		r = read_block(i, NULL);
+		if (r)
+			panic("read_bitmap(): read_block() failed: %e\n", r);
+	}
 
 	// Make sure the reserved and root blocks are marked in-use.
+	assert(bitmap);
 	assert(!block_is_free(0));
 	assert(!block_is_free(1));
-	assert(bitmap);
 
 	// Make sure that the bitmap blocks are marked in-use.
 	// LAB 5: Your code here.
+	for (i = 2; i <= (super->s_nblocks / BLKBITSIZE); i++)
+		assert(!block_is_free(i));
 
 	cprintf("read_bitmap is good\n");
 }
