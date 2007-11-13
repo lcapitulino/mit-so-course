@@ -163,8 +163,17 @@ free_block(uint32_t blockno)
 int
 alloc_block_num(void)
 {
+	uint32_t i;
+
 	// LAB 5: Your code here.
-	panic("alloc_block_num not implemented");
+	for (i = 3; i <= super->s_nblocks; i++) {
+		if (bitmap[i / 32] & (1 << (i % 32))) {
+			bitmap[i / 32] &= ~(1 << (i % 32));
+			write_block((i / BLKBITSIZE) + 2);
+			return i;
+		}
+	}
+
 	return -E_NO_DISK;
 }
 
