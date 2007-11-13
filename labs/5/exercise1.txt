@@ -1,9 +1,97 @@
 Exercise 1
 ----------
 
-Q: Do you have to do anything else to ensure that this I/O privilege setting is saved and
-restored properly when you subsequently switch from one environment to another? Make
-sure you understand how this environment state is handled.
+Q: Do you have to do anything else to ensure that this I/O privilege setting
+is saved and restored properly when you subsequently switch from one
+environment to another? Make sure you understand how this environment state
+is handled.
 
- No, it's not necessary to do anything else. The EFLAGS register is automatically
-saved and restored when switching tasks.
+ No, it's not necessary to do anything else. The EFLAGS register is
+automatically saved and restored when switching tasks.
+
+Exercise 4
+----------
+
+Q: Read through all of the code in fs/fs.c carefully and make sure you
+understand what each function does before proceeding.
+
+A: Here goes some documentation
+
+char *diskaddr(uint32_t blockno)
+
+ Return the virtual address of this disk block.
+
+bool va_is_mapped(void *va)
+
+ Return 1 if 'va' is mapped, 0 otherwise.
+
+bool block_is_mapped(uint32_t blockno)
+
+ Return 1 if 'blockno' is mapped, 0 otherwise.
+
+bool va_is_dirty(void *va)
+
+ Return 1 if 'va' is dirty, 0 otherwise.
+
+bool block_is_dirty(uint32_t blockno)
+
+ Return 1 if 'blockno' is dirty, 0 otherwise.
+
+int map_block(uint32_t blockno)
+
+ Allocate a page to hold the disk block. Return 0 on success, -1
+otherwise.
+
+static int read_block(uint32_t blockno, char **blk)
+
+ Read a block from disk into memory. Return 0 on success, -1
+otherwise.
+
+void write_block(uint32_t blockno)
+
+ Write a block from memory into disk. Return 0 on success, -1
+otherwise.
+
+void unmap_block(uint32_t blockno)
+
+ Unmap 'blockno'.
+
+bool block_is_free(uint32_t blockno)
+
+ Check to see if the block bitmap indicates that block 'blockno' is free.
+Return 1 if the block is free, 0 if not.
+
+void free_block(uint32_t blockno)
+
+ Mark a block free in the bitmap.
+
+int alloc_block_num(void)
+
+ Search the bitmap for a free block and allocate it.
+
+int alloc_block(void)
+
+ Allocate a block -- first find a free block in the bitmap, then map it
+into memory.
+
+void read_super(void)
+
+ Read and validate the file system super-block.
+
+void read_bitmap(void)
+
+ Read and validate the file system bitmap.
+
+void check_write_block(void)
+
+ Test that write_block works.
+
+void fs_init(void)
+
+ Initialize the file system.
+
+int file_block_walk(struct File *f, uint32_t filebno,
+                    uint32_t **ppdiskbno, bool alloc)
+
+ Find the disk block number slot for the 'filebno'th block in file 'f',
+This is like pgdir_walk for files.
