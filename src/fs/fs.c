@@ -594,8 +594,7 @@ file_open(const char *path, struct File **pf)
 {
 	// Hint: Use walk_path.
 	// LAB 5: Your code here.
-	panic("file_open not implemented");
-	return 0;
+	return walk_path(path, NULL, pf, NULL);
 }
 
 // Remove any blocks currently used by file 'f',
