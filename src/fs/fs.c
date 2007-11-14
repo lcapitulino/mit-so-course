@@ -637,8 +637,17 @@ file_set_size(struct File *f, off_t newsize)
 void
 file_flush(struct File *f)
 {
+	int r;
+	uint32_t diskbno, i;
+
 	// LAB 5: Your code here.
-	panic("file_flush not implemented");
+	for (i = 0; i < NINDIRECT; i++) {
+		r = file_map_block(f, i, &diskbno, 0);
+		if (r == -E_NOT_FOUND)
+			break;
+		if (block_is_dirty(diskbno))
+			write_block(diskbno);
+	}
 }
 
 // Sync the entire file system.  A big hammer.
