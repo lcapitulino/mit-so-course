@@ -422,8 +422,11 @@ file_get_block(struct File *f, uint32_t filebno, char **blk)
 	// Read in the block, leaving the pointer in *blk.
 	// Hint: Use file_map_block and read_block.
 	// LAB 5: Your code here.
-	panic("file_get_block not implemented");
-	return 0;
+	r = file_map_block(f, filebno, &diskbno, 1);
+	if (r)
+		return r;
+
+	return read_block(diskbno, blk);
 }
 
 // Mark the offset/BLKSIZE'th block dirty in file f
