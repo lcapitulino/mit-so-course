@@ -280,7 +280,13 @@ serve_dirty(envid_t envid, struct Fsreq_dirty *rq)
 	// Returns 0 on success, < 0 on error.
 	
 	// LAB 5: Your code here.
-	panic("serve_dirty not implemented");
+	if ((r = openfile_lookup(envid, rq->req_fileid, &o)) < 0)
+		goto out;
+
+	r = file_dirty(o->o_file, rq->req_offset);
+
+out:
+	ipc_send(envid, r, 0, 0);
 }
 
 void
