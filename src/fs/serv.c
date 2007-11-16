@@ -206,7 +206,21 @@ serve_map(envid_t envid, struct Fsreq_map *rq)
 	// (see the O_ flags in inc/lib.h).
 	
 	// LAB 5: Your code here.
-	panic("serve_map not implemented");
+	if ((r = openfile_lookup(envid, rq->req_fileid, &o)) < 0)
+		goto out_err;
+
+	if ((r = file_get_block(o->o_file, rq->req_offset/BLKSIZE, &blk)) < 0)
+		goto out_err;
+
+	perm = PTE_P | PTE_U;
+	if (o->o_mode & (O_WRONLY|O_RDWR|O_ACCMODE))
+		perm |= PTE_W;
+
+	ipc_send(envid, 0, blk, perm);
+	return;
+
+out_err:
+	ipc_send(envid, r, 0, 0);
 }
 
 void
