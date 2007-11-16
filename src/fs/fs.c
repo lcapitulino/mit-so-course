@@ -610,11 +610,39 @@ static void
 file_truncate_blocks(struct File *f, off_t newsize)
 {
 	int r;
+	char *blk;
 	uint32_t bno, old_nblocks, new_nblocks;
 
 	// Hint: Use file_clear_block and/or free_block.
 	// LAB 5: Your code here.
-	panic("file_truncate_blocks not implemented");
+	assert(f->f_size > newsize);
+
+	old_nblocks = f->f_size / BLKSIZE;
+	if (f->f_size % BLKSIZE)
+		++old_nblocks;
+	new_nblocks = newsize / BLKSIZE;
+
+	for (bno = new_nblocks; bno < old_nblocks; bno++) {
+		r = file_clear_block(f, bno);
+		if (r)
+			panic("file_clear_block(): %e\n", r);
+		if (bno < NDIRECT) {
+			f->f_direct[bno] = 0;
+		} else {
+			assert(f->f_indirect != 0);
+			if (!va_is_mapped(diskaddr(f->f_indirect))) {
+				r = read_block(f->f_indirect, &blk);
+				if (r)
+					panic("read_block(): %e\n", r);
+			}
+			*(blk + bno) = 0;
+		}
+	}
+
+	if (new_nblocks <= NDIRECT && f->f_indirect) {
+		free_block(f->f_indirect);
+		f->f_indirect = 0;
+	}
 }
 
 int
