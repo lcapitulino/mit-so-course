@@ -219,9 +219,15 @@ serve_close(envid_t envid, struct Fsreq_close *rq)
 		cprintf("serve_close %08x %08x\n", envid, rq->req_fileid);
 
 	// Close the file.
-	
+
 	// LAB 5: Your code here.
-	panic("serve_close not implemented");
+	if ((r = openfile_lookup(envid, rq->req_fileid, &o)) < 0)
+		goto out;
+
+	file_close(o->o_file);
+
+out:
+	ipc_send(envid, r, 0, 0);
 }
 
 void
