@@ -258,7 +258,13 @@ serve_remove(envid_t envid, struct Fsreq_remove *rq)
 	// Hint: Make sure the path is null-terminated!
 
 	// LAB 5: Your code here.
-	panic("serve_remove not implemented");
+
+	// Copy in the path, making sure it's null-terminated
+	memcpy(path, rq->req_path, MAXPATHLEN);
+	path[MAXPATHLEN-1] = 0;
+
+	r = file_remove(path);
+	ipc_send(envid, r, 0, 0);
 }
 
 void
