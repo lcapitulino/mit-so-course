@@ -30,6 +30,9 @@ static int funmap(struct Fd *fd, off_t oldsize, off_t newsize, bool dirty);
 int
 open(const char *path, int mode)
 {
+	int r;
+	struct Fd *fd;
+
 	// Find an unused file descriptor page using fd_alloc.
 	// Then send a message to the file server to open a file
 	// using a function in fsipc.c.
@@ -41,7 +44,23 @@ open(const char *path, int mode)
 	// If any step fails, use fd_close to free the file descriptor.
 
 	// LAB 5: Your code here.
-	panic("open() unimplemented!");
+	r = fd_alloc(&fd);
+	if (r < 0)
+		return r;
+
+	r = fsipc_open(path, mode, fd);
+	if (r < 0)
+		goto out_err;
+
+	r = fmap(fd, 0, fd->fd_file.file.f_size);
+	if (r < 0)
+		goto out_err;
+
+	return fd2num(fd);
+
+out_err:
+	fd_close(fd, 0);
+	return r;
 }
 
 // Clean up a file-server file descriptor.
