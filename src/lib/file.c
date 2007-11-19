@@ -68,12 +68,18 @@ out_err:
 static int
 file_close(struct Fd *fd)
 {
+	int r;
+
 	// Unmap any data mapped for the file,
 	// then tell the file server that we have closed the file
 	// (to free up its resources).
 
 	// LAB 5: Your code here.
-	panic("close() unimplemented!");
+	r = funmap(fd, fd->fd_file.file.f_size, 0, 1);
+	if (r < 0)
+		return r;
+
+	return fsipc_close(fd->fd_file.id);
 }
 
 // Read 'n' bytes from 'fd' at the current seek position into 'buf'.
