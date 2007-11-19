@@ -82,10 +82,23 @@ fd_alloc(struct Fd **fd_store)
 int
 fd_lookup(int fdnum, struct Fd **fd_store)
 {
-	// LAB 5: Your code here.
+	struct Fd *fd;
 
-	panic("fd_lookup not implemented");
-	return -E_INVAL;
+	// LAB 5: Your code here.
+	*fd_store = 0;
+
+	if (fdnum < 0 || fdnum > MAXFD)
+		return -E_INVAL;
+
+	fd = INDEX2FD(fdnum);
+	if ((uintptr_t) fd < FDTABLE || (uintptr_t) fd >= FILEBASE)
+		return -E_INVAL;
+
+	if (!va_is_mapped(fd))
+		return -E_INVAL;
+
+	*fd_store = fd;
+	return 0;
 }
 
 // Frees file descriptor 'fd' by closing the corresponding file
