@@ -14,6 +14,13 @@
 // Return the file data pointer for file descriptor index i
 #define INDEX2DATA(i)	((char*) (FILEBASE + (i)*PTSIZE))
 
+// Is this virtual address mapped?
+static int
+va_is_mapped(void *va)
+{
+	return (vpd[PDX(va)] & PTE_P) && (vpt[VPN(va)] & PTE_P);
+}
+
 
 /********************************
  * FILE DESCRIPTOR MANIPULATORS *
@@ -50,9 +57,19 @@ fd2num(struct Fd *fd)
 int
 fd_alloc(struct Fd **fd_store)
 {
-	// LAB 5: Your code here.
+	int i;
 
-	panic("fd_alloc not implemented");
+	assert(fd_store != 0);
+	*fd_store = 0;
+
+	// LAB 5: Your code here.
+	for (i = 0; i < MAXFD; i++) {
+		if (!va_is_mapped(INDEX2FD(i))) {
+			*fd_store = INDEX2FD(i);
+			return 0;
+		}
+	}
+
 	return -E_MAX_OPEN;
 }
 
