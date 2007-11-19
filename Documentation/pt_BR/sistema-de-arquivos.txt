@@ -1,0 +1,241 @@
+		  JOS: Implementação do sistema de arquivos
+
+			Luiz Fernando N. Capitulino
+			  <lcapitulino@gmail.com>
+
+1. Introdução
+-------------
+
+ Este documento descreve a implementação do sistema de arquivos do JOS
+(para detalhes sobre o layout consulte o pdf do laboratório 5).
+
+2. Visão geral
+--------------
+
+ A implementação do sistema de arquivos no JOS é feita em modo-usuário e tem
+o seguinte aspecto:
+
+
+	               	   |-----------|
+		           | Programas |
+		           |-----------|
+                            ||       /\ 
+                            ||       ||
+                            ||       ||      ---> Chamada de função
+                            \/       ||
+	               	   |-----------|
+		           |Biblioteca |
+		           |-----------|
+                            ||       /\ 
+                            ||       ||
+                            ||       ||      ---> IPC do JOS
+                            \/       ||
+	               	   |-----------|
+		           | FS server |
+		           |-----------|
+                            ||       /\ 
+                            ||       ||
+                            ||       ||      ---> Chamada de função
+                            \/       ||
+	               	   |-----------|
+		           |  Disco    |
+		           |-----------|
+
+ O acesso ao disco é feito pelo FS server, que é um environment comum e roda
+em modo-usuário, mas possui privilégio especial para fazer I/O.
+
+ A comunicação com o FS server é feita usando-se o mecanismo de IPC do JOS.
+Para tornar a utilização do sistema de arquivos mais simples, a biblioteca
+do JOS disponibiliza uma API cuja as funções tem a mesma semântica da API
+de I/O do Unix.
+
+ A seguir todos os detalhes da implementação serão explicados de forma
+bottom-up, ou seja, começaremos pelo FS server.
+
+3. FS server
+------------
+
+ Como dito anteriormente, no JOS, todo o acesso ao disco é feito por um
+environment especial, chamado de FS server.
+
+ Quando o FS server é executado, ele inicia algumas tabelas, inicializa
+o disco e entra em um loop infinito aguardando por requisições de
+outros environments.
+
+ As requisições são 'servidas' através do mecanismo de IPC do JOS.
+
+ Os arquivos-fonte do FS server estão disponíveis no diretório src/fs.
+
+3.1 Estrutura de dados
+----------------------
+
+struct File;
+
+ Descreve um arquivo no disco. Essa estrutura é lida na memória
+pelo FS server quando um arquivo é aberto.
+
+struct Openfile;
+
+ Descreve um arquivo aberto, tem um 'link' para a 'struct File' e
+'struct Fd' do arquivo.
+
+struct OpenFile opentab[MAXOPEN];
+
+ Vetor de 'struct OpenFile' que mantêm informações sobre arquivos
+abertos. O tamanho MAXOPEN define o número máximo de arquivos que
+pode estar aberto ao mesmo tempo.
+
+struct Fsreq_*;
+
+ Cada serviço disponibilizado pelo FS server tem sua própria
+estrutura Fsreq_ que deve ser preenchida pelo cliente ao solicitar
+o serviço.
+
+3.2 Requisições
+---------------
+
+void serve_open(envid_t envid, struct Fsreq_open *rq);
+
+ Abre um arquivo.
+
+void serve_set_size(envid_t envid, struct Fsreq_set_size *rq);
+
+ Modifica o tamanho de um arquivo.
+
+void serve_map(envid_t envid, struct Fsreq_map *rq);
+
+ Mapeia um determinado bloco no espaço de endereçamento do cliente.
+
+void serve_close(envid_t envid, struct Fsreq_close *rq);
+
+ Fecha um arquivo.
+
+void serve_remove(envid_t envid, struct Fsreq_remove *rq);
+
+ Remove um arquivo.
+
+void serve_dirty(envid_t envid, struct Fsreq_dirty *rq);
+
+ Marca um bloco na memória como sendo sujo.
+
+void serve_sync(envid_t envid);
+
+ Synca o sistema de arquivo inteiro com o disco.
+
+3.3 Funcionamento
+-----------------
+
+ O 'ciclo de vida' de um arquivo começa quando o arquivo é aberto,
+serve_open() executa os seguintes passos:
+
+	1. Garante que o parametro 'path' é terminado com '\0'
+	2. Aloca uma entrada na tabela 'opentab'
+	3. Abre o arquivo com file_open() (retorna uma 'struct File')
+	4. Preenche a entrada na tabela 'opentab' e a 'struct Fd'
+	5. Mapeia a 'struct Fd' no espaço de endereçamento do cliente
+
+ A maioria das operações exigem que o arquivo esteja aberto para serem
+executadas. Essas operações recebem o parâmetro 'fileid', que é um
+indíce na tabela 'opentab'.
+
+4. Biblioteca
+-------------
+
+ Para facilitar a interface com o FS server, a biblioteca do JOS
+implementa uma camada adicional que os programas podem usar para
+utilizar o sistema de arquivos.
+
+ Note, entretanto, que é possível 'falar' com o FS server diretamente
+se necessário.
+
+ Os arquivos que implementam essa camada são: lib/fd.c, lib/file.c e
+lib/fsipc.c.
+
+4.1 Estrutura de dados
+----------------------
+
+struct Fd;
+
+ Todo arquivo aberto tem uma 'struct Fd' que é compartilhada entre
+o FS server e o cliente.
+
+ É usado pelos clientes como um descritor de arquivo (file-descriptor)
+do Unix.
+
+4.2 API
+-------
+
+int open(const char *path, int mode);
+
+ Abre um arquivo.
+
+int read_map(int fd, off_t offset, void **blk);
+
+ Retorna a página na qual o bloco contendo 'offset' está mapeado.
+
+int ftruncate(int fd, off_t size);
+
+ 'Trunca' o tamanho do arquivo para 'size'.
+
+int remove(const char *path);
+
+ Remove arquivo.
+
+int sync(void);
+
+ Sincroniza o sistema de arquivos com o disco.
+
+int close(int fd);
+
+ Fecha arquivo.
+
+ssize_t	read(int fd, void *buf, size_t nbytes);
+ssize_t	readn(int fd, void *buf, size_t nbytes);
+
+ Lê do arquivo.
+
+ssize_t	write(int fd, const void *buf, size_t nbytes);
+
+ Escreve no arquivo.
+
+int seek(int fd, off_t offset);
+
+ Muda o ponteiro do arquivo.
+
+void close_all(void);
+
+ Fecha todos os descritores abertos (força bruta).
+
+int dup(int oldfd, int newfd);
+
+ Duplica um descritor de arquivo.
+
+int fstat(int fd, struct Stat *statbuf);
+int stat(const char *path, struct Stat *statbuf);
+
+ Retorna informações sobre o arquivo.
+
+4.3 Funcionamento
+-----------------
+
+ O suporte a sistema de arquivos define duas novas regiões dentro do
+espaço de endereçamento dos environments.
+
+ A primeira região vai de 0xcc00000 até 0xcfff000. Cada página dessa
+região pode conter uma 'struct Fd' para arquivos abertos, ie, se uma
+página dessa região estiver mapeada significa que ela armazena uma
+'struct Fd' e que o arquivo apontado por essa estrutura está aberto.
+
+ A segunda região começa em 0xD000000, e contêm o conteúdo dos arquivos
+abertos.
+
+ Para fazer mais sentido, veja o que open() faz quando é chamada:
+
+	1. Aloca espaço para uma 'struct Fd' (ie, procura uma página entre
+	   0xcc00000 e 0xcfff000 que não esteja mapeada)
+	2. Manda uma requisição para o FS server abrir um arquivo (quando o
+	   arquivo for aberto, o FS server vai mapear a 'struct Fd' do
+	   arquivo aberto no endereço passado pelo cliente)
+	3. Manda uma requisição para o FS server mapear todo o conteúdo do
+	   arquivo no espaço de endereçamento do cliente
+	4. Retorna o número da posição da 'struct Fd'
