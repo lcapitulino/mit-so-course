@@ -21,6 +21,12 @@ struct Elf {
 	uint16_t e_shstrndx;
 };
 
+// Values for Elf::e_type
+#define ET_EXEC 0x2
+
+// Values for Elf::e_machine
+#define EM_386   0x3
+
 struct Proghdr {
 	uint32_t p_type;
 	uint32_t p_offset;
@@ -61,5 +67,10 @@ struct Secthdr {
 
 // Values for Secthdr::sh_name
 #define ELF_SHN_UNDEF		0
+
+static int elf_header_is_valid(const struct Elf *hdr)
+{
+	return (hdr->e_ehsize && hdr->e_magic == ELF_MAGIC);
+}
 
 #endif /* !JOS_INC_ELF_H */
