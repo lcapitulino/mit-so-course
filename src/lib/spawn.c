@@ -247,7 +247,19 @@ init_stack(envid_t child, const char **argv, uintptr_t *init_esp)
 	//	  (Again, use an address valid in the child's environment.)
 	//
 	// LAB 5: Your code here.
-	*init_esp = USTACKTOP;	// Change this!
+	for (i = 0; i < argc; i++) {
+		argv_store[i] = UTEMP2USTACK(string_store);
+		string_size = strlen(argv[i]) + 1;
+		memcpy(string_store, argv[i], string_size);
+		string_store += string_size;
+	}
+
+	argv_store[argc] = 0;
+
+	*(argv_store - 1) = UTEMP2USTACK(&argv_store[0]);
+	*(argv_store - 2) = argc;
+
+	*init_esp = UTEMP2USTACK(argv_store - 2);
 
 	// After completing the stack, map it into the child's address space
 	// and unmap it from ours!
