@@ -294,3 +294,42 @@ segment_map_ro(int fd, envid_t child, const struct Proghdr *hdr)
 
 	return 0;
 }
+
+#if 0
+
+-> See in segment_map_rw() why this is commented.
+
+// Handle not-aligned addresses
+// 
+// If a virtual address is not-aligned, we should copy it into
+// the right offset inside its page in memory.
+// 
+// Return 0 on success, (negative) error code on failure
+static int
+map_unaligned_va(int fd, envid_t child, uintptr_t va, size_t *n)
+{
+	int err;
+	size_t ret, bytes;
+
+	err = sys_page_alloc(0, UTEMP, PTE_P|PTE_U|PTE_W);
+	if (err)
+		return err;
+
+	bytes = PGSIZE - PGOFF(va);
+	ret = readn(fd, UTEMP + PGOFF(va), bytes);
+	if (ret != bytes)
+		return -E_INVAL;
+
+	err = sys_page_map(0, UTEMP, child, (void *) va, PTE_P|PTE_U|PTE_W);
+	if (err)
+		return err;
+
+	err = sys_page_unmap(0, UTEMP);
+	if (err)
+		return err;
+
+	*n = bytes;
+	return 0;
+}
+#endif
+
