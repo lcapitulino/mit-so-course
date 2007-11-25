@@ -22,7 +22,12 @@ spawn(const char *prog, const char **argv)
 {
 	unsigned char elf_buf[512];
 	struct Trapframe child_tf;
+	uint16_t phentsize, phnum;
+	off_t phdr_offset;
+	struct Elf *hdr;
+	int i, err, fd;
 	envid_t child;
+	ssize_t bytes;
 
 	// Insert your code, following approximately this procedure:
 	//
@@ -86,9 +91,86 @@ spawn(const char *prog, const char **argv)
 	//   - Start the child process running with sys_env_set_status().
 
 	// LAB 5: Your code here.
-	
-	(void) child;
-	panic("spawn unimplemented!");
+
+	fd = open(prog, O_RDONLY);
+	if (fd < 0)
+		return fd;
+
+	memset(elf_buf, 0, sizeof(*hdr));
+	bytes = readn(fd, elf_buf, sizeof(*hdr));
+	if (bytes != sizeof(*hdr)) {
+		err = -E_INVAL;
+		goto out;
+	}
+
+	hdr = (struct Elf *) elf_buf;
+
+	err = check_elf_header(hdr);
+	if (err)
+		goto out;
+
+	child = sys_exofork();
+	if (child < 0) {
+		err = (int) child;
+		goto out;
+	}
+
+	child_tf = envs[ENVX(child)].env_tf;
+	child_tf.tf_regs = envs[ENVX(child)].env_tf.tf_regs;
+	child_tf.tf_eip = hdr->e_entry;
+	err = init_stack(child, argv, &child_tf.tf_esp);
+	if (err)
+		sys_env_destroy(child);
+
+	err = sys_env_set_trapframe(child, &child_tf);
+	if (err)
+		goto out_dest;
+
+	phentsize = hdr->e_phentsize;
+	phnum = hdr->e_phnum;
+	phdr_offset = hdr->e_phoff;
+
+	// Read ELF_PROG_LOAD segments into memory
+	for (i = 0; i < phnum; i++) {
+		struct Proghdr *phdr;
+
+		// Always go to the right prog header
+		err = seek(fd, phdr_offset + i * phentsize);
+		if (err)
+			goto out_dest;
+
+		memset(elf_buf, 0, phentsize);
+		bytes = readn(fd, elf_buf, phentsize);
+		if (bytes != phentsize) {
+			err = -E_INVAL;
+			goto out_dest;
+		}
+
+		phdr = (struct Proghdr *) elf_buf;
+
+		if (phdr->p_type != ELF_PROG_LOAD)
+			continue;
+
+		// XXX: The code assumes that
+		assert(phdr->p_memsz >= phdr->p_filesz);
+
+		if (phdr->p_flags & ELF_PROG_FLAG_WRITE)
+			err = segment_map_rw(fd, child, phdr);
+		else
+			err = segment_map_ro(fd, child, phdr);
+		if (err)
+			goto out_dest;
+	}
+
+	err = sys_env_set_status(child, ENV_RUNNABLE);
+
+out:
+	close(fd);
+	return err;
+
+out_dest:
+	sys_env_destroy(child);
+	goto out;
 }
 
 // Spawn, taking command-line arguments array directly on the stack.
