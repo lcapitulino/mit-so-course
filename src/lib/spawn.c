@@ -10,6 +10,7 @@ static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp);
 static int check_elf_header(const struct Elf *hdr);
 static void dump_prog_header(const struct Proghdr *hdr);
 static int segment_map_ro(int fd, envid_t child, const struct Proghdr *hdr);
+static int segment_map_rw(int fd, envid_t child, const struct Proghdr *hdr);
 
 // Spawn a child process from a program image loaded from the file system.
 // prog: the pathname of the program to run.
@@ -332,4 +333,75 @@ map_unaligned_va(int fd, envid_t child, uintptr_t va, size_t *n)
 	return 0;
 }
 #endif
+
+// Map a RW segment from file (fd) into child.
+// 
+// This function reads the entire segment described by 'hdr'
+// into the address range also described by 'hdr'.
+// 
+// It's supposed to deal with non-aligned addresses.
+// 
+// Return 0 on success, (negative) error code on failure
+static int
+segment_map_rw(int fd, envid_t child, const struct Proghdr *hdr)
+{
+	int err;
+	uintptr_t va;
+	size_t i, memsz, filesz;
+
+	err = seek(fd, hdr->p_offset);
+	if (err)
+		return err;
+
+	filesz = hdr->p_filesz;
+	memsz = ROUNDUP(hdr->p_memsz, PGSIZE);
+	va = ROUNDDOWN(hdr->p_va, PGSIZE);
+	if (va != hdr->p_va)
+		panic("Time to test map_unaligned_va()!!\n");
+
+#if 0
+	// This function is commented because I don't have any
+	// test case for it. If you've triggered the panic()
+	// above, please uncomment and give it a try.
+	//                              lcapitulino
+	if (va != hdr->p_va) {
+		size_t n;
+
+		err = map_unaligned_va(fd, child, hdr->p_va, &n);
+		if (err)
+			return err;
+		memsz -= PGSIZE;
+		filesz -= n;
+	}
+#endif
+
+	for (i = 0; i < memsz; i += PGSIZE) {
+		size_t ret, bytes;
+
+		err = sys_page_alloc(0, UTEMP, PTE_P|PTE_U|PTE_W);
+		if (err)
+			return err;
+
+		bytes = filesz > PGSIZE ? PGSIZE : filesz;
+
+		ret = readn(fd, UTEMP, bytes);
+		if (ret != bytes)
+			return -E_INVAL;
+
+		filesz -= ret;
+		assert(filesz >= 0);
+
+		err = sys_page_map(0, UTEMP, child, (void *) va + i,
+				   PTE_P|PTE_U|PTE_W);
+		if (err)
+			return err;
+
+		err = sys_page_unmap(0, UTEMP);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
 
