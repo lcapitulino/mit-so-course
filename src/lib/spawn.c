@@ -8,6 +8,7 @@
 // Helper functions for spawn.
 static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp);
 static int check_elf_header(const struct Elf *hdr);
+static void dump_prog_header(const struct Proghdr *hdr);
 
 // Spawn a child process from a program image loaded from the file system.
 // prog: the pathname of the program to run.
@@ -211,3 +212,44 @@ check_elf_header(const struct Elf *hdr)
 	return 0;
 }
 
+#if 0
+    Only for debug purposes
+
+// Dump Elf program header
+static void
+dump_prog_header(const struct Proghdr *hdr)
+{
+	switch (hdr->p_type) {
+	case 0:
+		cprintf("PT_NULL");
+		break;
+	case 1:
+		cprintf("PT_LOAD");
+		break;
+	case 2:
+		cprintf("PT_DYNAMIC");
+		break;
+	case 3:
+		cprintf("PT_INTERP");
+		break;
+	case 4:
+		cprintf("PT_NOTE");
+		break;
+	case 5:
+		cprintf("PT_SHLIB");
+		break;
+	case 6:
+		cprintf("PT_PHDR");
+		break;
+	default:
+		cprintf("Unknown");
+		break;
+	}
+
+	cprintf(": ");
+	cprintf("Offset:   0x%08x ", hdr->p_offset);
+	cprintf("VirtAddr: 0x%08x ", hdr->p_va);
+	cprintf("MemSiz:   0x%08x", hdr->p_memsz);
+	cprintf("\n");
+}
+#endif
