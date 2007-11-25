@@ -9,6 +9,7 @@
 static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp);
 static int check_elf_header(const struct Elf *hdr);
 static void dump_prog_header(const struct Proghdr *hdr);
+static int segment_map_ro(int fd, envid_t child, const struct Proghdr *hdr);
 
 // Spawn a child process from a program image loaded from the file system.
 // prog: the pathname of the program to run.
@@ -253,3 +254,43 @@ dump_prog_header(const struct Proghdr *hdr)
 	cprintf("\n");
 }
 #endif
+
+// Map a RO segment from file (fd) into child.
+// 
+// This function maps the entire segment described by 'hdr'
+// into the address range also described by 'hdr'.
+// 
+// Note that there's no copy involved in this function. We're
+// using read_map() which maps the disk blocks into the
+// caller's memory and then we map those pages into the
+// child's address space.
+// 
+// This function is supposed to deal with not-aligned address
+// correctly.
+// 
+// Return 0 on success, (negative) error code on failure
+static int
+segment_map_ro(int fd, envid_t child, const struct Proghdr *hdr)
+{
+	int err;
+	void *blk;
+	uintptr_t va;
+	off_t offset;
+	size_t i, memsz;
+
+	memsz = ROUNDUP(hdr->p_memsz, PGSIZE);
+	offset = ROUNDDOWN(hdr->p_offset, PGSIZE);
+	va = ROUNDDOWN(hdr->p_va, PGSIZE);
+
+	for (i = 0; i < memsz; i += PGSIZE) {
+		err = read_map(fd, offset + i, &blk);
+		if (err)
+			return err;
+
+		err = sys_page_map(0, blk, child, (void *) va + i,PTE_P|PTE_U);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
