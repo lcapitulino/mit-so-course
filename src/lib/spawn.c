@@ -7,6 +7,7 @@
 
 // Helper functions for spawn.
 static int init_stack(envid_t child, const char **argv, uintptr_t *init_esp);
+static int check_elf_header(const struct Elf *hdr);
 
 // Spawn a child process from a program image loaded from the file system.
 // prog: the pathname of the program to run.
@@ -177,5 +178,36 @@ error:
 	return r;
 }
 
+// Check if the Elf header is valid.
+// 
+// This function does a lot of sanity checks and assures that
+// the elf header describes a i386 executable file.
+// 
+// Returns 0 on sucess, -E_INVAL otherwise
+static int
+check_elf_header(const struct Elf *hdr)
+{
+	if (!elf_header_is_valid(hdr))
+		return -E_INVAL;
 
+	if (hdr->e_type != ET_EXEC)
+		return -E_INVAL;
+
+	if (hdr->e_machine != EM_386)
+		return -E_INVAL;
+
+	if (hdr->e_entry <= 0)
+		return -E_INVAL;
+
+	if (hdr->e_phoff <= 0)
+		return -E_INVAL;
+
+	if (hdr->e_phentsize <= 0)
+		return -E_INVAL;
+
+	if (hdr->e_phnum <= 0)
+		return -E_INVAL;
+
+	return 0;
+}
 
