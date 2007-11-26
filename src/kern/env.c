@@ -244,6 +244,39 @@ segment_alloc(struct Env *e, void *va, size_t len)
 	}
 }
 
+// Check if the Elf header is valid.
+// 
+// This function does a lot of sanity checks and assures that
+// the elf header describes a i386 executable file.
+// 
+// Returns 0 on sucess, -E_INVAL otherwise
+static int
+check_elf_header(const struct Elf *hdr)
+{
+	if (!elf_header_is_valid(hdr))
+		return -E_INVAL;
+
+	if (hdr->e_type != ET_EXEC)
+		return -E_INVAL;
+
+	if (hdr->e_machine != EM_386)
+		return -E_INVAL;
+
+	if (hdr->e_entry <= 0)
+		return -E_INVAL;
+
+	if (hdr->e_phoff <= 0)
+		return -E_INVAL;
+
+	if (hdr->e_phentsize <= 0)
+		return -E_INVAL;
+
+	if (hdr->e_phnum <= 0)
+		return -E_INVAL;
+
+	return 0;
+}
+
 //
 // Set up the initial program binary, stack, and processor flags
 // for a user process.
@@ -304,15 +337,9 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	//  What?  (See env_run() and env_pop_tf() below.)
 
 	hdr = (struct Elf *) binary;
-
-	if (hdr->e_type != 0x2)
-		panic("load_icode: not an executable file\n");
-
-	if (hdr->e_machine != 0x3)
-		panic("load_icode: not i386 executable file\n");
-
-	if (!hdr->e_phoff || !hdr->e_phnum)
-		panic("load_icode: program header table not present\n");
+	err = check_elf_header(hdr);
+	if (err)
+		panic("Elf header is not valid\n");
 
 	lcr3(e->env_cr3);
 
@@ -325,15 +352,14 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 				      " memory size");
 			}
 
-			// XXX: Are we leaking kernel memory here?
-			// segment_alloc() can round down memory addresses,
-			// and we won't use it...
-
 			segment_alloc(e, (void *) ph->p_va, ph->p_memsz);
+
+			// Brute force: it's easier to zero-init all
+			// the segment
+			memset((void *) ph->p_va, 0, ph->p_filesz);
+
 			memcpy((void *) ph->p_va, binary + ph->p_offset,
 			       ph->p_filesz);
-			memset((void *) ph->p_va + ph->p_filesz, 0,
-			       ph->p_memsz - ph->p_filesz);
 		}
 	}
 
