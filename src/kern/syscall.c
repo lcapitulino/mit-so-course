@@ -170,6 +170,30 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 	return 0;
 }
 
+// Get envid's trap frame.
+//
+// Returns 0 on success, < 0 on error.  Errors are:
+//	-E_BAD_ENV if environment envid doesn't currently exist,
+//		or the caller doesn't have permission to get envid.
+static int
+sys_env_get_trapframe(envid_t envid, struct Trapframe *tf)
+{
+	int err;
+	struct Env *e;
+
+	if (tf && (uintptr_t) tf >= UTOP)
+		return -E_INVAL;
+
+	err = envid2env(envid, &e, 1);
+	if (err)
+		return err;
+
+	*tf = e->env_tf;
+	tf->tf_regs = e->env_tf.tf_regs;
+
+	return 0;
+}
+
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
 // Env's 'env_pgfault_upcall' field.  When 'envid' causes a page fault, the
 // kernel will push a fault record onto the exception stack, then branch to
@@ -549,6 +573,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_ipc_recv((void *) a1);
 	case SYS_env_set_trapframe:
 		return sys_env_set_trapframe(a1, (struct Trapframe *) a2);
+	case SYS_env_get_trapframe:
+		return sys_env_get_trapframe(a1, (struct Trapframe *) a2);
 	default:
 		return -E_INVAL;
 	}
