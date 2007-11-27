@@ -36,6 +36,7 @@ KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
 
 # Binary program images to embed within the kernel.
 KERN_BINFILES :=	user/idle \
+			user/icode \
 			user/yield \
 			user/dumbfork \
 			user/faultread \
@@ -56,7 +57,14 @@ KERN_BINFILES :=	user/idle \
 			user/hello \
 			user/testfsipc \
 			user/writemotd \
-			user/icode \
+			user/testpteshare \
+			user/testfdsharing \
+			user/testpipe \
+			user/testpiperace \
+			user/testpiperace2 \
+			user/primespipe \
+			user/testkbd \
+			user/testshell \
 			fs/fs
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))

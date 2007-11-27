@@ -11,6 +11,7 @@ static int check_elf_header(const struct Elf *hdr);
 static void dump_prog_header(const struct Proghdr *hdr);
 static int segment_map_ro(int fd, envid_t child, const struct Proghdr *hdr);
 static int segment_map_rw(int fd, envid_t child, const struct Proghdr *hdr);
+static int copy_shared_pages(envid_t child);
 
 // Spawn a child process from a program image loaded from the file system.
 // prog: the pathname of the program to run.
