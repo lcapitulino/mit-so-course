@@ -230,8 +230,10 @@ segment_alloc(struct Env *e, void *va, size_t len)
 	// Hint: It is easier to use segment_alloc if the caller can pass
 	//   'va' and 'len' values that are not page-aligned.
 	//   You should round va down, and round len up.
+
+	len = ROUNDUP(len + PGOFF(va), PGSIZE);
 	va = ROUNDDOWN(va, PGSIZE);
-	len = ROUNDUP(len, PGSIZE);
+
 
 	for (i = 0; i < len; i += PGSIZE) {
 		err = page_alloc(&p);
