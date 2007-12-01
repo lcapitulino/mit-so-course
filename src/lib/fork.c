@@ -77,6 +77,9 @@ duppage(envid_t envid, unsigned pn)
 	perm = pte & 0xFFF;
 	perm &= ~(PTE_A|PTE_D);
 
+	if (perm & PTE_SHARE)
+		return sys_page_map(0, addr, envid, addr, perm);
+
 	if (perm & (PTE_W|PTE_COW)) {
 		perm &= ~PTE_W;
 		perm |= PTE_COW;
