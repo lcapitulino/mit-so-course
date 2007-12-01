@@ -163,6 +163,10 @@ spawn(const char *prog, const char **argv)
 			goto out_dest;
 	}
 
+	err = copy_shared_pages(child);
+	if (err)
+		goto out_dest;
+
 	err = sys_env_set_status(child, ENV_RUNNABLE);
 
 out:
@@ -494,6 +498,47 @@ segment_map_rw(int fd, envid_t child, const struct Proghdr *hdr)
 		err = sys_page_unmap(0, UTEMP);
 		if (err)
 			return err;
+	}
+
+	return 0;
+}
+
+static int map_shared_page(envid_t child, uint32_t pn)
+{
+	int perm;
+	void *addr;
+
+	addr = (void *) (pn * PGSIZE);
+	perm = vpt[pn] & 0xFFF;
+	perm &= ~(PTE_A|PTE_D);
+
+	return sys_page_map(0, addr, child, addr, perm);
+}
+
+static int copy_shared_pages(envid_t child)
+{
+	uint32_t pn;
+	int pdeno, pteno, err;
+
+	pn = 0;
+	for (pdeno = 0; pdeno < VPD(UTOP); pdeno++) {
+		if (vpd[pdeno] == 0) {
+			// skip empty PDEs
+			pn += NPTENTRIES;
+			continue;
+		}
+
+		for (pteno = 0; pteno < NPTENTRIES; pteno++,pn++) {
+			if (vpt[pn] == 0)
+				continue;
+
+			if (!(vpt[pn] & PTE_SHARE))
+				continue;
+
+			err = map_shared_page(child, pn);
+			if (err)
+				return err;
+		}
 	}
 
 	return 0;
