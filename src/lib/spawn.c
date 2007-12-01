@@ -168,10 +168,12 @@ spawn(const char *prog, const char **argv)
 		goto out_dest;
 
 	err = sys_env_set_status(child, ENV_RUNNABLE);
+	if (err)
+		goto out_dest;
 
 out:
 	close(fd);
-	return err;
+	return (err < 0 ? err : child);
 
 out_dest:
 	sys_env_destroy(child);
