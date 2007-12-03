@@ -212,7 +212,7 @@ serve_map(envid_t envid, struct Fsreq_map *rq)
 	if ((r = file_get_block(o->o_file, rq->req_offset/BLKSIZE, &blk)) < 0)
 		goto out_err;
 
-	perm = PTE_P | PTE_U;
+	perm = PTE_P | PTE_U | PTE_SHARE;
 	if (o->o_mode & (O_WRONLY|O_RDWR|O_ACCMODE))
 		perm |= PTE_W;
 
