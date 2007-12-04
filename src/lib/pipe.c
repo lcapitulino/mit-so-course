@@ -90,8 +90,7 @@ _pipeisclosed(struct Fd *fd, struct Pipe *p)
 	// everybody left is what fd is.  So the other end of
 	// the pipe is closed.
 
-	panic("_pipeisclosed not implemented");
-	return 0;
+	return pageref(fd) == pageref(p);
 }
 
 int
