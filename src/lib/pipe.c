@@ -150,9 +150,21 @@ piperead(struct Fd *fd, void *vbuf, size_t n, off_t offset)
 	return n;
 }
 
+static int
+pipe_is_full(const struct Pipe *p)
+{
+	return (((p->p_wpos + 1) % PIPEBUFSIZ) == p->p_rpos);
+}
+
 static ssize_t
 pipewrite(struct Fd *fd, const void *vbuf, size_t n, off_t offset)
 {
+	size_t i;
+	uint8_t *buf;
+	struct Pipe *p;
+
+	USED(offset);
+
 	// Your code here.  See the lab text for a description of what 
 	// pipewrite needs to do.  Write a loop that transfers one byte
 	// at a time.  Unlike in read, it is not okay to write only some
@@ -161,8 +173,20 @@ pipewrite(struct Fd *fd, const void *vbuf, size_t n, off_t offset)
 	// If the pipe is full and closed, return 0.
 	// Use _pipeisclosed to check whether the pipe is closed.
 
-	panic("pipewrite not implemented");
-	return -E_INVAL;
+	p = (struct Pipe *) fd2data(fd);
+	buf = (uint8_t *) vbuf;
+
+	for (i = 0; i < n; i++) {
+		while (pipe_is_full(p)) {
+			if (_pipeisclosed(fd, p))
+				return 0;
+			sys_yield();
+		}
+		p->p_buf[p->p_wpos] = buf[i];
+		p->p_wpos = (p->p_wpos + 1) % PIPEBUFSIZ;
+	}
+
+	return n;
 }
 
 static int
