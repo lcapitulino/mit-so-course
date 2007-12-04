@@ -106,9 +106,21 @@ pipeisclosed(int fdnum)
 	return _pipeisclosed(fd, p);
 }
 
+static int
+pipe_is_empty(const struct Pipe *p)
+{
+	return p->p_rpos == p->p_wpos;
+}
+
 static ssize_t
 piperead(struct Fd *fd, void *vbuf, size_t n, off_t offset)
 {
+	size_t i;
+	uint8_t *buf;
+	struct Pipe *p;
+
+	USED(offset);
+
 	// Your code here.  See the lab text for a description of
 	// what piperead needs to do.  Write a loop that 
 	// transfers one byte at a time.  If you decide you need
@@ -119,8 +131,23 @@ piperead(struct Fd *fd, void *vbuf, size_t n, off_t offset)
 	// return 0.
 	// Use _pipeisclosed to check whether the pipe is closed.
 
-	panic("piperead not implemented");
-	return -E_INVAL;
+	p = (struct Pipe *) fd2data(fd);
+	buf = (uint8_t *) vbuf;
+
+	for (i = 0; i < n; i++) {
+		if (pipe_is_empty(p)) {
+			if (_pipeisclosed(fd, p) && !i)
+				return 0;
+			if (!i)
+				sys_yield();
+			else
+				return i;
+		}
+		buf[i] = p->p_buf[p->p_rpos];
+		p->p_rpos = (p->p_rpos + 1) % PIPEBUFSIZ;
+	}
+
+	return n;
 }
 
 static ssize_t
