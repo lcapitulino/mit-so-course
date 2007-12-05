@@ -75,6 +75,9 @@ pipe(int pfd[2])
 static int
 _pipeisclosed(struct Fd *fd, struct Pipe *p)
 {
+	int res;
+	uint32_t runs1, runs2;
+
 	// Your code here.
 	// 
 	// Check pageref(fd) and pageref(p),
@@ -90,7 +93,17 @@ _pipeisclosed(struct Fd *fd, struct Pipe *p)
 	// everybody left is what fd is.  So the other end of
 	// the pipe is closed.
 
-	return pageref(fd) == pageref(p);
+	for (;;) {
+		runs1 = env->env_runs;
+		res = pageref(fd) == pageref(p);
+		runs2 = env->env_runs;
+
+		if (runs1 == runs2)
+			return res;
+
+		if ((runs1 != runs2) && res)
+			cprintf("pipe race avoided\n");
+	}
 }
 
 int
@@ -203,6 +216,12 @@ pipestat(struct Fd *fd, struct Stat *stat)
 static int
 pipeclose(struct Fd *fd)
 {
+	int err;
+
+	err = sys_page_unmap(0, fd);
+	if (err)
+		return err;
+
 	return sys_page_unmap(0, fd2data(fd));
 }
 
