@@ -135,7 +135,7 @@ piperead(struct Fd *fd, void *vbuf, size_t n, off_t offset)
 	buf = (uint8_t *) vbuf;
 
 	for (i = 0; i < n; i++) {
-		if (pipe_is_empty(p)) {
+		while (pipe_is_empty(p)) {
 			if (_pipeisclosed(fd, p) && !i)
 				return 0;
 			if (!i)
