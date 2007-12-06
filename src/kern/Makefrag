@@ -65,6 +65,7 @@ KERN_BINFILES :=	user/idle \
 			user/primespipe \
 			user/testkbd \
 			user/testshell \
+			user/testsyncbug \
 			fs/fs
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
