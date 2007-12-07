@@ -111,7 +111,7 @@ write_block(uint32_t blockno)
 	if (r)
 		panic("write_block(): ide_write() failed: %e\n", r);
 
-	r = sys_page_map(0, addr, 0, addr, PTE_U|PTE_P|PTE_W);
+	r = sys_page_map(0, addr, 0, addr, vpt[VPN(addr)] & PTE_USER);
 	if (r)
 		panic("write_block(): sys_page_map() failed: %e\n", r);
 }
