@@ -105,8 +105,6 @@ write_block(uint32_t blockno)
 	
 	// Write the disk block and clear PTE_D.
 	// LAB 5: Your code here.
-	if (!block_is_dirty(blockno))
-		return;
 
 	addr = diskaddr(blockno);
 	r = ide_write(blockno * BLKSECTS, addr, BLKSECTS);
