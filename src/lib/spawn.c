@@ -511,8 +511,7 @@ static int map_shared_page(envid_t child, uint32_t pn)
 	void *addr;
 
 	addr = (void *) (pn * PGSIZE);
-	perm = vpt[pn] & 0xFFF;
-	perm &= ~(PTE_A|PTE_D);
+	perm = vpt[pn] & PTE_USER;
 
 	return sys_page_map(0, addr, child, addr, perm);
 }
