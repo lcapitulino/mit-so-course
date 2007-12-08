@@ -74,8 +74,7 @@ duppage(envid_t envid, unsigned pn)
 
 	pte = vpt[pn];
 	addr = (void *) (pn * PGSIZE);
-	perm = pte & 0xFFF;
-	perm &= ~(PTE_A|PTE_D);
+	perm = pte & PTE_USER;
 
 	if (perm & PTE_SHARE)
 		return sys_page_map(0, addr, envid, addr, perm);
