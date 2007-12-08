@@ -424,11 +424,12 @@ file_get_block(struct File *f, uint32_t filebno, char **blk)
 	if (r)
 		return r;
 
-	// If the block is already mapped and is dirty
-	// we return it instead of reading the block from
-	// disk again. Otherwise we'd overwrite the
-	// in-memory version.
-	if (block_is_dirty(diskbno)) {
+	// If the block is already mapped we return it
+	// instead of reading the block from disk again.
+	// XXX: I'm not sure whether this is the right
+	// thing to do, however, looks like lab5 says
+	// to do that (p. 7).
+	if (block_is_mapped(diskbno)) {
 		if (blk)
 			*blk = diskaddr(diskbno);
 		return 0;
