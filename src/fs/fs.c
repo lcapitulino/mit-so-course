@@ -87,7 +87,7 @@ read_block(uint32_t blockno, char **blk)
 	if (blk)
 		*blk = addr;
 
-	return 0;
+	return sys_page_map(0, addr, 0, addr, vpt[VPN(addr)] & PTE_USER);
 }
 
 // Copy the current contents of the block out to disk.
