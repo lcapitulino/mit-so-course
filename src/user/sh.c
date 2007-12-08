@@ -84,9 +84,22 @@ again:
 			// then check whether 'fd' is 1.
 			// If not, dup 'fd' onto file descriptor 1,
 			// then close the original 'fd'.
-			
+
 			// LAB 5: Your code here.
-			panic("> redirection not implemented");
+			fd = open(t, O_WRONLY);
+			if (fd < 0) {
+				cprintf("cannot open %s: %e\n", t, fd);
+				exit();
+			}
+
+			if (fd != 1) {
+				r = dup(fd, 1);
+				if (r < 0) {
+					cprintf("cannot dup: %e\n", r);
+					exit();
+				}
+				close(fd);
+			}
 			break;
 			
 		case '|':	// Pipe
