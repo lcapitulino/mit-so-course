@@ -127,7 +127,29 @@ again:
 			//	the pipeline.
 
 			// LAB 5: Your code here.
-			panic("| not implemented");
+			r = pipe(p);
+			pipe_child = fork();
+			if (!pipe_child) {
+				// child
+				r = dup(p[0], 0);
+				if (r < 0) {
+					cprintf("cannot dup: %e\n", r);
+					exit();
+				}
+				close(p[1]);
+				close(p[0]);
+				goto again;
+			}
+
+			// parent
+			r = dup(p[1], 1);
+			if (r < 0) {
+				cprintf("cannot dup: %e\n", r);
+				exit();
+			}
+			close(p[1]);
+			close(p[0]);
+			goto runit;
 			break;
 
 		case 0:		// String is complete
