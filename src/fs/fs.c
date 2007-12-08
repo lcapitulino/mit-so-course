@@ -679,8 +679,10 @@ file_flush(struct File *f)
 	// LAB 5: Your code here.
 	for (i = 0; i < NINDIRECT; i++) {
 		r = file_map_block(f, i, &diskbno, 0);
-		if (r == -E_NOT_FOUND)
+		if (r == -E_NOT_FOUND || r == -E_INVAL)
 			break;
+		if (r < 0)
+			continue;
 		if (block_is_dirty(diskbno))
 			write_block(diskbno);
 	}
