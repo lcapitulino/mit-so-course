@@ -12,6 +12,7 @@ USERAPPS := 		$(OBJDIR)/user/cat \
 			$(OBJDIR)/user/ls \
 			$(OBJDIR)/user/lsfd \
 			$(OBJDIR)/user/num \
+			$(OBJDIR)/user/rm \
 			$(OBJDIR)/user/forktree \
 			$(OBJDIR)/user/primes
 
