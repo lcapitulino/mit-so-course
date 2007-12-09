@@ -112,6 +112,12 @@ serve_open(envid_t envid, struct Fsreq_open *rq)
 		goto out;
 	}
 
+	if (rq->req_omode & O_TRUNC) {
+		r = file_set_size(f, 1);
+		if (r < 0)
+			goto out;
+	}
+
 	// Save the file pointer
 	o->o_file = f;
 
