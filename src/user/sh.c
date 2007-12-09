@@ -86,7 +86,7 @@ again:
 			// then close the original 'fd'.
 
 			// LAB 5: Your code here.
-			fd = open(t, O_WRONLY);
+			fd = open(t, O_WRONLY | O_TRUNC);
 			if (fd < 0) {
 				cprintf("cannot open %s: %e\n", t, fd);
 				exit();
