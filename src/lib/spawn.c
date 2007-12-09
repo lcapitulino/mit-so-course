@@ -93,39 +93,41 @@ spawn(const char *prog, const char **argv)
 
 	// LAB 5: Your code here.
 
+	// fork before open(), otherwise sys_exofork() will
+	// duplicate fd in the child
+	child = sys_exofork();
+	if (child < 0)
+		return (int) child;
+
 	fd = open(prog, O_RDONLY);
-	if (fd < 0)
-		return fd;
+	if (fd < 0) {
+		err = fd;
+		goto out_err;
+	}
 
 	memset(elf_buf, 0, sizeof(*hdr));
 	bytes = readn(fd, elf_buf, sizeof(*hdr));
 	if (bytes != sizeof(*hdr)) {
 		err = -E_INVAL;
-		goto out;
+		goto out_err;
 	}
 
 	hdr = (struct Elf *) elf_buf;
 
 	err = check_elf_header(hdr);
 	if (err)
-		goto out;
-
-	child = sys_exofork();
-	if (child < 0) {
-		err = (int) child;
-		goto out;
-	}
+		goto out_err;
 
 	child_tf = envs[ENVX(child)].env_tf;
 	child_tf.tf_regs = envs[ENVX(child)].env_tf.tf_regs;
 	child_tf.tf_eip = hdr->e_entry;
 	err = init_stack(child, argv, &child_tf.tf_esp);
 	if (err)
-		sys_env_destroy(child);
+		goto out_err;
 
 	err = sys_env_set_trapframe(child, &child_tf);
 	if (err)
-		goto out_dest;
+		goto out_err;
 
 	phentsize = hdr->e_phentsize;
 	phnum = hdr->e_phnum;
@@ -138,13 +140,13 @@ spawn(const char *prog, const char **argv)
 		// Always go to the right prog header
 		err = seek(fd, phdr_offset + i * phentsize);
 		if (err)
-			goto out_dest;
+			goto out_err;
 
 		memset(elf_buf, 0, phentsize);
 		bytes = readn(fd, elf_buf, phentsize);
 		if (bytes != phentsize) {
 			err = -E_INVAL;
-			goto out_dest;
+			goto out_err;
 		}
 
 		phdr = (struct Proghdr *) elf_buf;
@@ -152,7 +154,7 @@ spawn(const char *prog, const char **argv)
 		if (phdr->p_type != ELF_PROG_LOAD)
 			continue;
 
-		// XXX: The code assumes that
+		// XXX: The code assumes this
 		assert(phdr->p_memsz >= phdr->p_filesz);
 
 		if (phdr->p_flags & ELF_PROG_FLAG_WRITE)
@@ -160,22 +162,28 @@ spawn(const char *prog, const char **argv)
 		else
 			err = segment_map_ro(fd, child, phdr);
 		if (err)
-			goto out_dest;
+			goto out_err;
 	}
+
+	// Close fd before copy_shared_pages(), otherwise
+	// it'll duplicate fd in the child
+	close(fd);
+	fd = -1;
 
 	err = copy_shared_pages(child);
 	if (err)
-		goto out_dest;
+		goto out_err;
 
 	err = sys_env_set_status(child, ENV_RUNNABLE);
 	if (err)
-		goto out_dest;
+		goto out_err;
 
 out:
-	close(fd);
+	if (fd >= 0)
+		close(fd);
 	return (err < 0 ? err : child);
 
-out_dest:
+out_err:
 	sys_env_destroy(child);
 	goto out;
 }
