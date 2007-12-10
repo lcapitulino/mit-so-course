@@ -22,11 +22,11 @@ void
 runcmd(char* s)
 {
 	char *argv[MAXARGS], *t, argv0buf[BUFSIZ];
-	int argc, c, i, r, p[2], fd, pipe_child;
+	int argc, c, i, r, p[2], fd, pipe_child, bground;
 
-	pipe_child = 0;
+	pipe_child = bground = 0;
 	gettoken(s, 0);
-	
+
 again:
 	argc = 0;
 	while (1) {
@@ -156,6 +156,10 @@ again:
 			close(p[0]);
 			goto runit;
 
+		case '&':        // background
+			bground = 1;
+			break;
+
 		case 0:		// String is complete
 			// Run the current command!
 			goto runit;
@@ -204,9 +208,11 @@ runit:
 	if (r >= 0) {
 		if (debug)
 			cprintf("[%08x] WAIT %s %08x\n", env->env_id, argv[0], r);
-		wait(r);
-		if (debug)
-			cprintf("[%08x] wait finished\n", env->env_id);
+		if (!bground) {
+			wait(r);
+			if (debug)
+				cprintf("[%08x] wait finished\n", env->env_id);
+		}
 	}
 
 	// If we were the left-hand part of a pipe,
