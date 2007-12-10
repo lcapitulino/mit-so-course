@@ -106,14 +106,20 @@ serve_open(envid_t envid, struct Fsreq_open *rq)
 	fileid = r;
 
 	// Open the file
-	if ((r = file_open(path, &f)) < 0) {
+	r = file_open(path, &f);
+	if (r == -E_NOT_FOUND && (rq->req_omode & O_CREAT)) {
+		// Creat the file
+		r = file_create(path, &f);
+	}
+	if (r < 0) {
 		if (debug)
-			cprintf("file_open failed: %e", r);
+			cprintf("file_open or file_create failed: %e", r);
 		goto out;
 	}
 
 	if (rq->req_omode & O_TRUNC) {
 		if (rq->req_omode & (O_RDWR | O_WRONLY)) {
+			// Truncate the file
 			r = file_set_size(f, 1);
 			if (r < 0)
 				goto out;
