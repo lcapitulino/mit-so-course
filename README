@@ -1,20 +1,87 @@
-This' my own work on the MIT OS course available at:
+		         The JOS operating system
+                        ===========================
+
+			Luiz Fernando N. Capitulino
+			  <lcapitulino@gmail.com>
+
+1. Introduction
+---------------
+
+ This' my version of the JOS operating system, built from the MIT's
+operating system engineering classes.
+
+ The original course's page used to be hosted at:
 
 http://ocw.mit.edu/OcwWeb/Electrical-Engineering-and-Computer-Science/6-828Fall-2006/CourseHome/index.htm
 
- To try JOS you should:
+2. Trying it
+------------
 
-1. Enter the src directory
+$ cd src
+$ make
+$ bochs
 
-	$ cd src
+3. Source-code directory layout
+-------------------------------
 
-2. Compile
+|-- boot -> JOS boot loader
+|-- conf -> lab config files (not kernel related)
+|-- fs   -> file system
+|-- inc  -> include files shared between kernel and user modes
+|-- kern -> kernel code
+|-- lib  -> libOS
+`-- user -> user programs
 
-	$ make
+4. Tools' versions
+------------------
 
-3. Run it on bochs
+ JOS has been developed and tested on Mandriva Linux 2007.1,
+2008.0 and early 2008.1's development version.
 
-	$ bochs -f ../bochsrc
+ Important versions of used tools:
 
-Luiz Fernando N. Capitulino
-<lcapitulino@gmail.com>
+o bochs: 2.2.6, 2.3.5
+o GCC: 4.1.2, 4.2.2
+o binutils: 2.17.50.0.9, 2.17.50.0.12
+
+5. Repository
+-------------
+
+ JOS is hosted in a GIT repository at:
+
+http://repo.or.cz/w/mit-so-course.git
+
+ To clone do:
+
+$ git clone git://repo.or.cz/mit-so-course.git
+
+6. Tags
+-------
+
+ All important milestone's have been tagged, the most important
+ones are the lab's final commit.
+
+ To see all the finals do:
+
+$ git tag -l | grep final
+
+ The grade script should complete with 100% score for all labs
+except lab1.
+
+ [ I don't know why lab1's grade script doesn't work. Either I didn't
+   tag at the right time or the VGA exercise wasn't done... I don't
+   like VGA stuff, I remember I've skipped something... ]
+
+7. Duration
+-----------
+
+ If you check my first and last commits, you'll think that the course
+took more than 8 months to be done (from 2007-03-04 to 2007-12-10).
+
+ But, if you check carefully you'll realize that there was a pause
+of more than three months. That's because I had to stop working on
+this project to work on my Google Summer of Code project.
+
+ So, I've spent less than five months on this actually.
+
+ Btw, this was one of the best projects I've worked on my life!
