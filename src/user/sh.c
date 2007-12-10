@@ -129,6 +129,11 @@ again:
 			// LAB 5: Your code here.
 			r = pipe(p);
 			pipe_child = fork();
+			if (pipe_child < 0) {
+				cprintf("cannot fork: %e\n", pipe_child);
+				exit();
+			}
+
 			if (!pipe_child) {
 				// child
 				r = dup(p[0], 0);
@@ -150,7 +155,6 @@ again:
 			close(p[1]);
 			close(p[0]);
 			goto runit;
-			break;
 
 		case 0:		// String is complete
 			// Run the current command!
