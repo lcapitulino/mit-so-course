@@ -27,7 +27,8 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/testpipe \
 			$(OBJDIR)/user/testpteshare \
 			$(OBJDIR)/user/testshell \
-			$(OBJDIR)/user/testmalloc
+			$(OBJDIR)/user/testmalloc \
+			$(OBJDIR)/user/testfilecreat
 
 FSIMGTXTFILES :=	$(FSIMGTXTFILES) \
 			fs/lorem \
