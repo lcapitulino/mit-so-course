@@ -7,8 +7,8 @@
 1. Introduction
 ---------------
 
- This' my version of the JOS operating system, built from the MIT's
-operating system engineering classes.
+ This' my version of the JOS operating system, built from the MIT's operating
+system engineering classes.
 
  The original course's page used to be hosted at:
 
@@ -35,8 +35,8 @@ $ bochs
 4. Tools' versions
 ------------------
 
- JOS has been developed and tested on Mandriva Linux 2007.1,
-2008.0 and early 2008.1's development version.
+ JOS has been developed and tested on Mandriva Linux 2007.1, 2008.0 and
+early 2008.1's development version.
 
  Important versions of used tools:
 
@@ -58,15 +58,14 @@ $ git clone git://repo.or.cz/mit-so-course.git
 6. Tags
 -------
 
- All important milestone's have been tagged, the most important
-ones are the lab's final commit.
+ All important milestone's have been tagged, the most important ones are
+the lab's final commit.
 
  To see all the finals do:
 
 $ git tag -l | grep final
 
- The grade script should complete with 100% score for all labs
-except lab1.
+ The grade script should complete with 100% score for all labs except lab1.
 
  [ I don't know why lab1's grade script doesn't work. Either I didn't
    tag at the right time or the VGA exercise wasn't done... I don't
@@ -75,13 +74,13 @@ except lab1.
 7. Duration
 -----------
 
- If you check my first and last commits, you'll think that the course
-took more than 8 months to be done (from 2007-03-04 to 2007-12-10).
+ If you check my first and last commits, you'll think that the course took
+more than 8 months to be done (from 2007-03-04 to 2007-12-10).
 
- But, if you check carefully you'll realize that there was a pause
-of more than three months. That's because I had to stop working on
-this project to work on my Google Summer of Code project.
+ But, if you check carefully you'll realize that there was a pause of more
+than three months. That's because I had to stop working on this project to
+work on my Google Summer of Code project.
 
  So, I've spent less than five months on this actually.
 
- Btw, this was one of the best projects I've worked on my life!
+ Btw, this was one of the best projects I've ever worked on my life!
