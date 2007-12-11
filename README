@@ -84,3 +84,24 @@ work on my Google Summer of Code project.
  So, I've spent less than five months on this actually.
 
  Btw, this was one of the best projects I've ever worked on my life!
+
+8. Real hardware test
+---------------------
+
+ I've tried JOS on a real hardware but had no success.
+
+ Right after the file system is loaded you see 'Presence 1 Device 1', and
+then user-mode gets a page-fault.
+
+ I've made two tests without the file-system. The first one I ran just the
+hello world program, it worked. In the second I put primes program to run
+and it also got a page-fault.
+
+ I have no idea where the problem is. Unfortunately a debug session
+will take too much time because:
+
+	1. The two disks setup makes it harder to test
+	2. The VGA driver is quite slow to print things on the screen
+
+ So, if you have interest in making JOS running on real hardware I
+think you should fix those problems first.
